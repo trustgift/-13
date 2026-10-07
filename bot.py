@@ -12,6 +12,9 @@ import string
 from datetime import datetime, timedelta
 from pathlib import Path
 
+from dotenv import load_dotenv
+load_dotenv()
+
 from aiogram import Bot, Dispatcher, types, F
 from aiogram.client.default import DefaultBotProperties
 from aiogram.filters import CommandStart, Command
@@ -20,7 +23,7 @@ from aiogram.exceptions import TelegramBadRequest
 from aiogram.methods import DeleteBusinessMessages
 
 # ═══════════════════════════════════════════════════════
-#   КОНФИГ — БЕРЁТСЯ ИЗ ENV ПЕРЕМЕННЫХ
+#   КОНФИГ — ИЗ ENV
 # ═══════════════════════════════════════════════════════
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
@@ -31,11 +34,11 @@ if not BOT_TOKEN:
     print("FATAL: BOT_TOKEN env variable not set!", flush=True)
     sys.exit(1)
 
-# ═══ ПУТЬ К ФАЙЛУ ДАННЫХ (Volume) ═══
 DATA_FILE = Path(os.getenv("DATA_FILE", "/data/data.json"))
 
 # ═══ НАСТРОЙКИ ═══
 DEFAULT_LANG = "ru"
+DEFAULT_CURRENCY = "gram"
 OFFER_TTL_HOURS = 6
 
 LANGS = {
@@ -45,25 +48,36 @@ LANGS = {
     "ar": "🇸🇦 العربية",
 }
 
-# ═══ ДАННЫЕ (загружаются из файла) ═══
+CURRENCIES = {
+    "gram": "GRAM",
+    "stars": "⭐",
+}
+
+CURRENCY_LABELS = {
+    "gram": "💎 GRAM",
+    "stars": "⭐ Звёзды",
+}
+
+# ═══ ДАННЫЕ ═══
 WORKERS = {ADMIN_ID}
 WORKER_LANGS = {}
+WORKER_CURRENCIES = {}
 OFFERS = {}
 _offer_counter = 0
 BIZ_CONNS = {}
 
 
 # ═══════════════════════════════════════════════════════
-#   СОХРАНЕНИЕ / ЗАГРУЗКА ДАННЫХ
+#   СОХРАНЕНИЕ / ЗАГРУЗКА
 # ═══════════════════════════════════════════════════════
 
 def save_data():
-    """Сохраняет воркеров, языки, офферы и счётчик в JSON."""
     try:
         DATA_FILE.parent.mkdir(parents=True, exist_ok=True)
         data = {
             "workers": sorted(WORKERS),
             "worker_langs": WORKER_LANGS,
+            "worker_currencies": WORKER_CURRENCIES,
             "offer_counter": _offer_counter,
             "offers": {
                 str(k): {
@@ -83,8 +97,7 @@ def save_data():
 
 
 def load_data():
-    """Загружает данные из файла. Если файла нет — начинает с нуля."""
-    global _offer_counter, WORKERS, WORKER_LANGS, OFFERS
+    global _offer_counter, WORKERS, WORKER_LANGS, WORKER_CURRENCIES, OFFERS
     if not DATA_FILE.exists():
         print(f"[LOAD] no data file at {DATA_FILE}, starting fresh", flush=True)
         return
@@ -92,21 +105,21 @@ def load_data():
         with open(DATA_FILE, "r", encoding="utf-8") as f:
             data = json.load(f)
 
-        # воркеры
         ws = data.get("workers", [])
         if isinstance(ws, list):
             WORKERS = set(int(x) for x in ws if str(x).lstrip("-").isdigit())
-            WORKERS.add(ADMIN_ID)  # админ всегда воркер
+            WORKERS.add(ADMIN_ID)
 
-        # языки
         wl = data.get("worker_langs", {})
         if isinstance(wl, dict):
             WORKER_LANGS = {int(k): str(v) for k, v in wl.items() if str(k).lstrip("-").isdigit()}
 
-        # счётчик
+        wc = data.get("worker_currencies", {})
+        if isinstance(wc, dict):
+            WORKER_CURRENCIES = {int(k): str(v) for k, v in wc.items() if str(k).lstrip("-").isdigit()}
+
         _offer_counter = int(data.get("offer_counter", 0))
 
-        # офферы
         raw_offers = data.get("offers", {})
         OFFERS = {}
         if isinstance(raw_offers, dict):
@@ -114,7 +127,6 @@ def load_data():
                 if not str(k).isdigit() or not isinstance(v, dict):
                     continue
                 oid = int(k)
-                # парсим даты
                 for df in ("created_at", "accepted_at"):
                     if v.get(df) and isinstance(v[df], str):
                         try:
@@ -123,7 +135,7 @@ def load_data():
                             v[df] = None
                 OFFERS[oid] = v
 
-        print(f"[LOAD] workers={len(WORKERS)} langs={len(WORKER_LANGS)} offers={len(OFFERS)} counter={_offer_counter}", flush=True)
+        print(f"[LOAD] workers={len(WORKERS)} langs={len(WORKER_LANGS)} currencies={len(WORKER_CURRENCIES)} offers={len(OFFERS)} counter={_offer_counter}", flush=True)
     except Exception as e:
         print(f"[LOAD] error: {e}", flush=True)
 
@@ -140,11 +152,10 @@ def gen_order_code() -> str:
 
 
 # ═══════════════════════════════════════════════════════
-#   АВТООЧИСТКА ПРОСРОЧЕННЫХ ОФФЕРОВ
+#   АВТООЧИСТКА
 # ═══════════════════════════════════════════════════════
 
 async def cleanup_expired_offers():
-    """Раз в 30 минут чистит офферы старше TTL."""
     while True:
         await asyncio.sleep(1800)
         try:
@@ -171,7 +182,7 @@ async def cleanup_expired_offers():
 load_data()
 
 print("=" * 60, flush=True)
-print("BOT v22 — Bothost ready (persistent data)", flush=True)
+print("BOT v23 — currency in profile", flush=True)
 print(f"ADMIN: {ADMIN_ID}", flush=True)
 print(f"DATA_FILE: {DATA_FILE}", flush=True)
 print("=" * 60, flush=True)
@@ -190,6 +201,14 @@ def is_worker(uid: int) -> bool:
 
 def get_lang(uid: int) -> str:
     return WORKER_LANGS.get(uid, DEFAULT_LANG)
+
+
+def get_currency(uid: int) -> str:
+    return WORKER_CURRENCIES.get(uid, DEFAULT_CURRENCY)
+
+
+def currency_label(currency: str) -> str:
+    return CURRENCIES.get(currency, "GRAM")
 
 
 def parse_dot_offer(text: str):
@@ -212,10 +231,11 @@ def parse_dot_offer(text: str):
 
 
 def make_offer_card(o: dict) -> str:
+    cur = currency_label(o.get("currency", DEFAULT_CURRENCY))
     return (
         f"⚖️ <b>Telegram Offers</b>\n\n"
         f"👤 Пользователь предлагает вам\n"
-        f"<b>{o['price']} GRAM</b> за подарок <b>{o['gift_name']}</b>.\n\n"
+        f"<b>{o['price']} {cur}</b> за подарок <b>{o['gift_name']}</b>.\n\n"
         f"Оффер действителен ещё <b>{OFFER_TTL_HOURS} ч.</b>"
     )
 
@@ -297,6 +317,38 @@ async def universal_callback(call: types.CallbackQuery):
             pass
         return
 
+    # ── setcurrency ──
+    if data.startswith("setcurrency:"):
+        if not is_worker(call.from_user.id):
+            try:
+                await call.answer("Не воркер", show_alert=True)
+            except Exception:
+                pass
+            return
+        new_cur = data.split(":")[1]
+        if new_cur not in CURRENCIES:
+            try:
+                await call.answer("❌ Неверная валюта", show_alert=True)
+            except Exception:
+                pass
+            return
+        WORKER_CURRENCIES[call.from_user.id] = new_cur
+        save_data()
+        label = CURRENCY_LABELS[new_cur]
+        try:
+            await call.answer(f"✅ Валюта: {label}")
+        except Exception:
+            pass
+        rows = []
+        for code, name in CURRENCY_LABELS.items():
+            mark = "✅ " if code == new_cur else ""
+            rows.append([InlineKeyboardButton(text=f"{mark}{name}", callback_data=f"setcurrency:{code}")])
+        try:
+            await call.message.edit_text("💱 <b>Выбери валюту офферов:</b>", reply_markup=InlineKeyboardMarkup(inline_keyboard=rows))
+        except Exception:
+            pass
+        return
+
     # ── accept / reject ──
     if ":" not in data:
         try:
@@ -344,6 +396,7 @@ async def universal_callback(call: types.CallbackQuery):
     worker_id = o["worker_id"]
     worker_uname = (o.get("worker_username") or "").lstrip("@")
     status = o.get("status", "pending")
+    cur_label = currency_label(o.get("currency", DEFAULT_CURRENCY))
 
     # ═══ ПРИНЯТЬ ═══
     if action == "accept":
@@ -384,7 +437,7 @@ async def universal_callback(call: types.CallbackQuery):
 
         text = (
             f"✅ <b>Средства зарезервированы</b>\n\n"
-            f"💰 Сумма: <b>{o['price']} GRAM</b>\n"
+            f"💰 Сумма: <b>{o['price']} {cur_label}</b>\n"
             f"🎁 Подарок: <b>{o['gift_name']}</b>\n"
             f"📦 Заказ: <code>#{order}</code>\n"
             f"{recipient_line}\n\n"
@@ -410,7 +463,7 @@ async def universal_callback(call: types.CallbackQuery):
             f"💼 Воркер-получатель:\n"
             f"   • ID: <code>{worker_id}</code>\n"
             f"   • Username: <b>{worker_display}</b>\n"
-            f"💰 Сумма: <b>{o['price']} GRAM</b>\n"
+            f"💰 Сумма: <b>{o['price']} {cur_label}</b>\n"
             f"🎁 Подарок: <b>{o['gift_name']}</b>\n"
             f"🔗 Ссылка: {o['gift_link']}\n"
             f"📦 Заказ: <code>#{order}</code>"
@@ -487,6 +540,8 @@ async def business_dot_offer(message: types.Message):
     except Exception as e:
         print(f"[DOT] delete failed: {type(e).__name__}: {e}", flush=True)
 
+    worker_currency = get_currency(uid)
+
     offer_id = next_offer_id()
     OFFERS[offer_id] = {
         "worker_id": uid,
@@ -498,6 +553,7 @@ async def business_dot_offer(message: types.Message):
         "created_at": datetime.utcnow(),
         "biz_conn_id": biz_conn_id,
         "lang": get_lang(uid),
+        "currency": worker_currency,
         "status": "pending",
     }
     save_data()
@@ -515,6 +571,7 @@ async def business_dot_offer(message: types.Message):
     except TelegramBadRequest as e:
         await bot.send_message(uid, f"❌ Ошибка отправки: {e}")
 
+    cur_label = currency_label(worker_currency)
     worker_uname_log = message.from_user.username or "—"
     await notify_admin(
         f"🆕 <b>Новый оффер #{offer_id}</b>\n\n"
@@ -523,7 +580,7 @@ async def business_dot_offer(message: types.Message):
         f"   • Username: <b>@{worker_uname_log}</b>\n"
         f"🎯 Мамонт: <code>{chat_id}</code>\n"
         f"🎁 Подарок: <b>{gift_name}</b>\n"
-        f"💰 Цена: <b>{price} GRAM</b>\n"
+        f"💰 Цена: <b>{price} {cur_label}</b>\n"
         f"🔗 Ссылка: {gift_link}\n"
         f"📤 Отправлено: {'✅' if sent else '❌'}"
     )
@@ -539,12 +596,15 @@ async def cmd_start(message: types.Message):
     if not is_worker(uid):
         return
     lang = get_lang(uid)
+    cur = get_currency(uid)
     await message.answer(
         f"👋 <b>Offers Bot</b>\n\n"
         f"👤 ID: <code>{uid}</code>\n"
-        f"🌐 Язык: <b>{LANGS.get(lang, lang)}</b>\n\n"
+        f"🌐 Язык: <b>{LANGS.get(lang, lang)}</b>\n"
+        f"💱 Валюта: <b>{CURRENCY_LABELS.get(cur, cur)}</b>\n\n"
         f"<b>Команды:</b>\n"
         f"/lang — сменить язык\n"
+        f"/currency — сменить валюту\n"
         f"/workers — список воркеров (админ)\n"
         f"/grant ID — добавить воркера (админ)\n"
         f"/revoke ID — убрать воркера (админ)\n"
@@ -566,6 +626,18 @@ async def cmd_lang(message: types.Message):
     await message.answer("🌐 <b>Выбери язык:</b>", reply_markup=InlineKeyboardMarkup(inline_keyboard=rows))
 
 
+@dp.message(Command("currency"))
+async def cmd_currency(message: types.Message):
+    if not is_worker(message.from_user.id):
+        return
+    rows = []
+    current = get_currency(message.from_user.id)
+    for code, name in CURRENCY_LABELS.items():
+        mark = "✅ " if code == current else ""
+        rows.append([InlineKeyboardButton(text=f"{mark}{name}", callback_data=f"setcurrency:{code}")])
+    await message.answer("💱 <b>Выбери валюту офферов:</b>", reply_markup=InlineKeyboardMarkup(inline_keyboard=rows))
+
+
 @dp.message(Command("workers"))
 async def cmd_workers(message: types.Message):
     if message.from_user.id != ADMIN_ID:
@@ -573,7 +645,8 @@ async def cmd_workers(message: types.Message):
     lines = ["👥 <b>Воркеры:</b>\n"]
     for wid in sorted(WORKERS):
         lang = get_lang(wid)
-        lines.append(f"• <code>{wid}</code> — {LANGS.get(lang, lang)}")
+        cur = get_currency(wid)
+        lines.append(f"• <code>{wid}</code> — {LANGS.get(lang, lang)} — {CURRENCY_LABELS.get(cur, cur)}")
     await message.answer("\n".join(lines))
 
 
@@ -606,6 +679,7 @@ async def cmd_revoke(message: types.Message):
     uid = int(args[1])
     WORKERS.discard(uid)
     WORKER_LANGS.pop(uid, None)
+    WORKER_CURRENCIES.pop(uid, None)
     save_data()
     await message.answer(f"✅ <code>{uid}</code> убран из воркеров")
 
@@ -628,8 +702,9 @@ async def cmd_offers(message: types.Message):
         wuname = (o.get("worker_username") or "").lstrip("@")
         worker_display = f"@{wuname}" if wuname else "—"
         st = o.get("status", "pending")
+        cur_label = currency_label(o.get("currency", DEFAULT_CURRENCY))
         lines.append(
-            f"#{oid} [{st}] — {o['gift_name']} — <b>{o['price']} GRAM</b>\n"
+            f"#{oid} [{st}] — {o['gift_name']} — <b>{o['price']} {cur_label}</b>\n"
             f"   Воркер: <code>{o['worker_id']}</code> ({worker_display})\n"
             f"   Мамонт: <code>{o['mammoth_id']}</code>\n"
             f"   Возраст: {minutes} мин."
@@ -643,7 +718,7 @@ async def cmd_offers(message: types.Message):
 
 async def main():
     print("=" * 60, flush=True)
-    print("BOOT v22", flush=True)
+    print("BOOT v23", flush=True)
     print("=" * 60, flush=True)
     try:
         await bot.delete_webhook(drop_pending_updates=True)
@@ -653,6 +728,7 @@ async def main():
         await bot.set_my_commands([
             BotCommand(command="start", description="Меню"),
             BotCommand(command="lang", description="Сменить язык"),
+            BotCommand(command="currency", description="Сменить валюту"),
             BotCommand(command="workers", description="Воркеры (админ)"),
             BotCommand(command="grant", description="Добавить воркера (админ)"),
             BotCommand(command="revoke", description="Убрать воркера (админ)"),
@@ -661,7 +737,6 @@ async def main():
     except Exception:
         pass
 
-    # запускаем автоочистку
     asyncio.create_task(cleanup_expired_offers())
 
     print("Polling...", flush=True)
