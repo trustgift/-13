@@ -23,18 +23,28 @@ from aiogram.exceptions import TelegramBadRequest
 from aiogram.methods import DeleteBusinessMessages
 
 # ═══════════════════════════════════════════════════════
-#   КОНФИГ — ИЗ ENV
+#   КОНФИГУРАЦИЯ (Впиши сюда или передай через .env)
 # ═══════════════════════════════════════════════════════
 
-BOT_TOKEN = os.getenv("BOT_TOKEN")
-ADMIN_ID = int(os.getenv("ADMIN_ID", "1544353769"))
-BOT_USERNAME = os.getenv("BOT_USERNAME", "hoptibot")
+MANUAL_BOT_TOKEN = ""         # Если пусто, берётся из BOT_TOKEN в .env
+MANUAL_ADMIN_ID = 1544353769  # Твой ID администратора
+MANUAL_BOT_USERNAME = "hoptibot"
+
+BOT_TOKEN = MANUAL_BOT_TOKEN.strip() or os.getenv("BOT_TOKEN", "").strip()
+env_admin = os.getenv("ADMIN_ID", "").strip()
+ADMIN_ID = (int(env_admin) if env_admin.isdigit() else 0) or MANUAL_ADMIN_ID
+BOT_USERNAME = (MANUAL_BOT_USERNAME.strip().lstrip("@") or os.getenv("BOT_USERNAME", "hoptibot")).lstrip("@")
 
 if not BOT_TOKEN:
-    print("FATAL: BOT_TOKEN env variable not set!", flush=True)
-    sys.exit(1)
+    print("=" * 60)
+    print("🔑 BOT_TOKEN не найден в коде и в .env файле!")
+    print("=" * 60)
+    BOT_TOKEN = input("👉 Введи BOT_TOKEN: ").strip()
+    if not BOT_TOKEN:
+        print("FATAL: BOT_TOKEN пустой!", flush=True)
+        sys.exit(1)
 
-# Автоопределение пути к базе (для Windows и Linux/Docker)
+# Автоопределение пути к базе (Windows: data/data.json, Linux/Docker: /data/data.json)
 default_data_path = "data/data.json" if os.name == "nt" else "/data/data.json"
 DATA_FILE = Path(os.getenv("DATA_FILE", default_data_path))
 
@@ -410,7 +420,7 @@ def save_data():
 def load_data():
     global _offer_counter, WORKERS, WORKER_LANGS, WORKER_CURRENCIES, OFFERS
     if not DATA_FILE.exists():
-        print(f"[LOAD] no data file at {DATA_FILE}, starting fresh", flush=True)
+        print(f"[LOAD] data file не найден в {DATA_FILE}, начинаем с чистого листа", flush=True)
         return
     try:
         with open(DATA_FILE, "r", encoding="utf-8") as f:
@@ -498,8 +508,10 @@ load_data()
 
 print("=" * 60, flush=True)
 print("BOT v24 — Multi-language + Telegram Premium Emojis", flush=True)
+print(f"BOT USERNAME: @{BOT_USERNAME}", flush=True)
 print(f"ADMIN: {ADMIN_ID}", flush=True)
 print(f"DATA_FILE: {DATA_FILE}", flush=True)
+print(f"PREMIUM EMOJI: {'ON' if USE_PREMIUM_EMOJI else 'OFF'}", flush=True)
 print("=" * 60, flush=True)
 
 bot = Bot(BOT_TOKEN, default=DefaultBotProperties(parse_mode="HTML"))
