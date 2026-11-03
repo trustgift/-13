@@ -49,7 +49,7 @@ from aiogram.exceptions import TelegramBadRequest
 
 BOT_TOKEN = os.getenv("BOT_TOKEN", "").strip()
 ADMIN_ID = int(os.getenv("ADMIN_ID", "1544353769"))
-BOT_USERNAME = os.getenv("BOT_USERNAME", "hoptibot").lstrip("@")
+BOT_USERNAME = os.getenv("BOT_USERNAME", "mototanyagazbot").lstrip("@")
 
 API_ID = int(os.getenv("API_ID", "0"))
 API_HASH = os.getenv("API_HASH", "").strip()
@@ -65,7 +65,7 @@ if not API_ID or not API_HASH:
 default_data_path = "data/data.json" if os.name == "nt" else "/data/data.json"
 DATA_FILE = Path(os.getenv("DATA_FILE", default_data_path))
 
-USE_PREMIUM_EMOJI = True
+USE_PREMIUM_EMOJI = False
 
 DEFAULT_LANG = "ru"
 DEFAULT_CURRENCY = "gram"
